@@ -10,6 +10,9 @@ export default function Home() {
 
   const connectWallet = async () => {
     try {
+      if (!window.solana) {
+        throw new Error("Phantom Wallet no encontrada.");
+      }
       const resp = await window.solana.connect();
       setWalletAddress(resp.publicKey.toString());
     } catch (err) {
