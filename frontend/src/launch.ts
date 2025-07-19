@@ -12,7 +12,7 @@ import {
 } from "@solana/spl-token";
 
 // 👇 Cast correcto del IDL
-const idl = rawIdl as Idl;
+const idl = rawIdl as unknown as Idl;
 
 // 👇 Constantes necesarias
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
