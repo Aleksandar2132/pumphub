@@ -1,5 +1,5 @@
 import { AnchorProvider, BN, Program, Wallet, web3, Idl } from "@coral-xyz/anchor";
-import idl from "./idl/pumpfun.json";
+import rawIdl from "./idl/pumpfun.json";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -11,8 +11,11 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
+// 👇 Cast correcto del IDL para evitar error de tipado
+const idl = rawIdl as unknown as Idl;
+
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
-const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x"); // Tu cuenta feeReceiver
+const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x");
 
 export async function launchToken(wallet: Wallet, decimals: number, amount: number) {
   if (!wallet.publicKey) throw new Error("Wallet no conectada");
@@ -20,7 +23,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
-  const program = new Program(idl as Idl, programID, provider); // <- tipado correcto
+  const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
