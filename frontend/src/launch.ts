@@ -25,7 +25,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
   // 👇 ESTA ES LA LÍNEA CRUCIAL (usa el orden correcto y evita el error)
-  const program = new Program(idl as Idl, programID, provider);
+  const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
