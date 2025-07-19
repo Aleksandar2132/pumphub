@@ -1,4 +1,5 @@
-import { AnchorProvider, BN, Program, Wallet, web3, Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Wallet, web3, Idl } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor/dist/cjs/program"; // ⬅️ cambio clave
 import rawIdl from "./idl/pumpfun.json";
 import { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import {
