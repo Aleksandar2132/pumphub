@@ -44,7 +44,7 @@ export default function Home() {
 
   useEffect(() => {
     if (window.solana && window.solana.isPhantom) {
-      window.solana.connect({ onlyIfTrusted: true }).then((resp: any) => {
+      window.solana.connect().then((resp: any) => {
         setWalletAddress(resp.publicKey.toString());
       });
     }
