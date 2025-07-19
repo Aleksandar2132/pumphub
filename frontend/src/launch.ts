@@ -29,8 +29,8 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   console.log("provider.connection endpoint:", provider.connection.rpcEndpoint);
   console.log("provider.wallet publicKey:", provider.wallet.publicKey?.toBase58());
 
-  // Crear instancia del programa con tipado correcto:
-  const program = new Program(idl, programID, provider);
+  // Crear instancia del programa con tipado correcto (con cast para evitar error TS):
+  const program = new Program(idl, programID, provider as any);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
