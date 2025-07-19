@@ -23,6 +23,12 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
+  // Logs para debugear las instancias
+  console.log("programID instanceof PublicKey:", programID instanceof PublicKey);
+  console.log("provider instanceof AnchorProvider:", provider instanceof AnchorProvider);
+  console.log("provider.connection:", provider.connection);
+  console.log("provider.wallet:", provider.wallet);
+
   // Aquí la línea clave corregida con el tipado correcto:
   const program = new Program(idl, programID, provider);
 
