@@ -1,5 +1,4 @@
-import { AnchorProvider, BN, Wallet, web3, Idl } from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor/dist/cjs/program"; // ⬅️ cambio clave
+import { AnchorProvider, BN, Wallet, web3, Idl, Program } from "@coral-xyz/anchor";
 import rawIdl from "./idl/pumpfun.json";
 import { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import {
@@ -12,7 +11,7 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
-// 👇 Cast correcto del IDL para evitar error de tipado
+// Cast correcto del IDL para evitar error de tipado
 const idl = rawIdl as unknown as Idl;
 
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
@@ -24,14 +23,12 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const connection = new Connection("https://api.devnet.solana.com");
   const anchorProvider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
-  // Logs para debug
-  console.log("programID instanceof PublicKey:", programID instanceof PublicKey);
-  console.log("anchorProvider.constructor.name:", anchorProvider.constructor.name);
-  console.log("anchorProvider.connection.rpcEndpoint:", anchorProvider.connection.rpcEndpoint);
-  console.log("anchorProvider.wallet.publicKey:", anchorProvider.wallet.publicKey?.toBase58());
-
-  // Crear instancia del programa con tipado correcto
-  const program = new Program(idl, programID, anchorProvider);
+  // Crear instancia del programa con tipado correcto (tipar <typeof idl>)
+  const program = new Program<typeof idl>(
+    idl,
+    programID,
+    anchorProvider
+  );
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
