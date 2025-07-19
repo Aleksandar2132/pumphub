@@ -1,4 +1,4 @@
-import { AnchorProvider, BN, Program, Wallet, web3 } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, Wallet, web3, Idl } from "@coral-xyz/anchor";
 import idl from "./idl/pumpfun.json";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -19,7 +19,8 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
 
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
-  const program = new Program(idl as any, programID, provider);
+
+  const program = new Program(idl as Idl, programID, provider); // <- tipado correcto
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
