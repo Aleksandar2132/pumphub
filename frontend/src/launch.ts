@@ -23,6 +23,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
+  // Aquí la línea clave corregida con el tipado correcto:
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
