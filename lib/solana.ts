@@ -3,8 +3,8 @@ import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
 import { AnchorProvider, Program, web3 } from '@project-serum/anchor';
 import { getAssociatedTokenAddress, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import idl from './idl/pumpfun.json'; // Asegúrate de que esté en: frontend/lib/idl/pumpfun.json
-
+import idl from '@/lib/idl/pumpfun.json';
+ // Asegúrate de que esté en: frontend/lib/idl/pumpfun.json
 // 👇 Usa tu Program ID real que te dio `anchor deploy`
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 

@@ -1,28 +1,24 @@
-import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, Wallet, web3 } from "@coral-xyz/anchor";
 import idl from "./idl/pumpfun.json";
-import { 
-  Connection, 
-  PublicKey, 
-  SystemProgram 
-} from "@solana/web3.js";
-import { 
-  ASSOCIATED_TOKEN_PROGRAM_ID, 
-  TOKEN_PROGRAM_ID, 
-  createAssociatedTokenAccountInstruction, 
-  getAssociatedTokenAddress, 
-  getMinimumBalanceForRentExemptMint, 
-  createInitializeMintInstruction, 
-  MINT_SIZE 
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddress,
+  getMinimumBalanceForRentExemptMint,
+  createInitializeMintInstruction,
+  MINT_SIZE,
 } from "@solana/spl-token";
 
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
-const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x"); // Pon aquí tu cuenta de fee receiver
+const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x"); // Tu cuenta feeReceiver
 
-export async function launchToken(wallet: any, decimals: number, amount: number) {
+export async function launchToken(wallet: Wallet, decimals: number, amount: number) {
   if (!wallet.publicKey) throw new Error("Wallet no conectada");
 
   const connection = new Connection("https://api.devnet.solana.com");
-  const provider = new AnchorProvider(connection, wallet, {});
+  const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
   const program = new Program(idl as any, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
