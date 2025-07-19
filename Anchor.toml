@@ -1,0 +1,12 @@
+[programs.devnet]
+pumpfun = "FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/curl/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[toolchain]
+anchor_version = "0.29.0"
