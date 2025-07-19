@@ -3,7 +3,7 @@ pumpfun = "FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/curl/.config/solana/id.json"
+wallet = "C:\\Users\\aleks\\.config\\solana\\id.json"
 
 [scripts]
 test = "cargo test"
