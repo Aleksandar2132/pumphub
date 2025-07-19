@@ -21,7 +21,6 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   if (!wallet.publicKey) throw new Error("Wallet no conectada");
 
   const connection = new Connection("https://api.devnet.solana.com");
-  // Cambié el nombre para evitar shadowing/confusión:
   const anchorProvider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
   // Logs para debug
@@ -30,7 +29,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   console.log("anchorProvider.connection.rpcEndpoint:", anchorProvider.connection.rpcEndpoint);
   console.log("anchorProvider.wallet.publicKey:", anchorProvider.wallet.publicKey?.toBase58());
 
-  // Crear instancia del programa con tipado correcto, sin usar 'any':
+  // Crear instancia del programa con tipado correcto
   const program = new Program(idl, programID, anchorProvider);
 
   const mintKeypair = web3.Keypair.generate();
