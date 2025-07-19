@@ -1,6 +1,6 @@
 import { AnchorProvider, BN, Program, Wallet, web3, Idl } from "@coral-xyz/anchor";
 import rawIdl from "./idl/pumpfun.json";
-import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -21,13 +21,13 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   if (!wallet.publicKey) throw new Error("Wallet no conectada");
 
   const connection = new Connection("https://api.devnet.solana.com");
-  const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+  const provider: AnchorProvider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
-  // Logs para debugear las instancias
+  // Logs para debug, puedes borrar luego
   console.log("programID instanceof PublicKey:", programID instanceof PublicKey);
   console.log("provider instanceof AnchorProvider:", provider instanceof AnchorProvider);
-  console.log("provider.connection:", provider.connection);
-  console.log("provider.wallet:", provider.wallet);
+  console.log("provider.connection endpoint:", provider.connection.rpcEndpoint);
+  console.log("provider.wallet publicKey:", provider.wallet.publicKey?.toBase58());
 
   // Crear instancia del programa con tipado correcto:
   const program = new Program(idl, programID, provider);
@@ -50,11 +50,11 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
       feeReceiver,
       tokenProgram: TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
-      rent: web3.SYSVAR_RENT_PUBKEY,
+      rent: SYSVAR_RENT_PUBKEY,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     })
     .preInstructions([
-      web3.SystemProgram.createAccount({
+      SystemProgram.createAccount({
         fromPubkey: wallet.publicKey,
         newAccountPubkey: mint,
         space: MINT_SIZE,
