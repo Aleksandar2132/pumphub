@@ -11,9 +11,10 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
-// Cast correcto del IDL para evitar error de tipado
-const idl = rawIdl as unknown as Idl;
+// 👇 Cast correcto del IDL
+const idl = rawIdl as Idl;
 
+// 👇 Constantes necesarias
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
 const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x");
 
@@ -21,14 +22,10 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   if (!wallet.publicKey) throw new Error("Wallet no conectada");
 
   const connection = new Connection("https://api.devnet.solana.com");
-  const anchorProvider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+  const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
-  // Crear instancia del programa con tipado correcto (tipar <typeof idl>)
-  const program = new Program<typeof idl>(
-    idl,
-    programID,
-    anchorProvider
-  );
+  // 👇 ESTA ES LA LÍNEA CRUCIAL (usa el orden correcto y evita el error)
+  const program = new Program(idl as Idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
