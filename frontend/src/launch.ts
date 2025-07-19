@@ -29,7 +29,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   console.log("provider.connection:", provider.connection);
   console.log("provider.wallet:", provider.wallet);
 
-  // Aquí la línea clave corregida con el tipado correcto:
+  // Crear instancia del programa con tipado correcto:
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
