@@ -1,6 +1,7 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
-import { AnchorProvider, Program, web3, Wallet } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
+import type { Wallet } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -32,16 +33,15 @@ export const createTokenOnChain = async ({
     throw new Error('Phantom wallet not found');
   }
 
-  // 👇 Wrapper que convierte solana en tipo Wallet
   if (!solana.publicKey) {
-  throw new Error('Wallet not connected');
-}
+    throw new Error('Wallet not connected');
+  }
 
-const wallet: Wallet = {
-  publicKey: solana.publicKey,
-  signAllTransactions: solana.signAllTransactions.bind(solana),
-  signTransaction: solana.signTransaction.bind(solana),
-};
+  const wallet: Wallet = {
+    publicKey: solana.publicKey,
+    signAllTransactions: solana.signAllTransactions.bind(solana),
+    signTransaction: solana.signTransaction.bind(solana),
+  };
 
   const provider = new AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
