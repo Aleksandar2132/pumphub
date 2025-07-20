@@ -1,9 +1,9 @@
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Wallet } from "@coral-xyz/anchor";
+import { NodeWallet } from "@coral-xyz/anchor";
 
-export function getAnchorWallet(wallet: WalletContextState): Wallet | null {
+export function getAnchorWallet(wallet: WalletContextState): NodeWallet | null {
   if (
-    wallet &&
+    wallet?.wallet?.adapter &&
     wallet.publicKey &&
     wallet.signTransaction &&
     wallet.signAllTransactions
@@ -12,7 +12,7 @@ export function getAnchorWallet(wallet: WalletContextState): Wallet | null {
       publicKey: wallet.publicKey,
       signTransaction: wallet.signTransaction,
       signAllTransactions: wallet.signAllTransactions,
-    };
+    } as NodeWallet;
   }
   return null;
 }
