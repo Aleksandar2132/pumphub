@@ -1,35 +1,35 @@
+import React from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { launchToken } from "./launch";
-import { getAnchorWallet } from "./utils/getAnchorWallet";
+import { Connection } from "@solana/web3.js";
+import { AnchorProvider } from "@coral-xyz/anchor";
+import { launchToken } from "../launch"; // ajusta ruta si es necesario
+import { getAnchorWallet } from "../utils/getAnchorWallet";
 
-const LaunchButton = () => {
-  const wallet = useWallet();
+export function LaunchButton() {
+  const walletContext = useWallet();
 
   const handleLaunch = async () => {
-    const anchorWallet = getAnchorWallet(wallet);
+    const anchorWallet = getAnchorWallet(walletContext);
     if (!anchorWallet) {
       alert("Conecta tu wallet primero");
       return;
     }
+    const connection = new Connection("https://api.devnet.solana.com");
+    const provider = new AnchorProvider(connection, anchorWallet, AnchorProvider.defaultOptions());
 
     try {
-      const tx = await launchToken(9, 1_000_000_000, anchorWallet);
-      console.log("Transacción:", tx);
+      const tx = await launchToken(9, 1_000_000_000, provider);
+      console.log("Token lanzado con transacción:", tx);
       alert("✅ Token lanzado: " + tx);
     } catch (err) {
-      console.error("Error al lanzar token:", err);
-      alert("❌ Error: " + err);
+      console.error("❌ Error lanzando token:", err);
+      alert("Error lanzando token: " + (err as Error).message);
     }
   };
 
   return (
-    <button
-      onClick={handleLaunch}
-      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl mt-4"
-    >
+    <button onClick={handleLaunch}>
       Launch Token 🚀
     </button>
   );
 };
-
-export default LaunchButton;

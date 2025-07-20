@@ -30,18 +30,12 @@ const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x"
 export async function launchToken(
   decimals: number,
   amount: number,
-  wallet: AnchorProvider["wallet"] // ✅ CAMBIO AQUÍ
+  provider: AnchorProvider
 ) {
+  const wallet = provider.wallet;
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet no conectada o inválida.");
   }
-
-  const connection = new Connection("https://api.devnet.solana.com");
-  const provider = new AnchorProvider(
-    connection,
-    wallet,
-    AnchorProvider.defaultOptions()
-  );
 
   const program = new Program(idl, programID, provider);
 
@@ -53,7 +47,7 @@ export async function launchToken(
   const tokenAccount = await getAssociatedTokenAddress(mint, user);
   const feeTokenAccount = await getAssociatedTokenAddress(mint, feeReceiver);
 
-  const rent = await getMinimumBalanceForRentExemptMint(connection);
+  const rent = await getMinimumBalanceForRentExemptMint(provider.connection);
 
   const tx = await program.methods
     .launchToken(decimals, new BN(amount))
