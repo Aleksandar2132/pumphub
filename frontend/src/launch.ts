@@ -1,4 +1,4 @@
-import { AnchorProvider, Wallet, BN, web3, Idl, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program, Idl, Wallet, web3 } from "@coral-xyz/anchor";
 import rawIdl from "./idl/pumpfun.json";
 import { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@solana/spl-token";
 
 // 👇 Cast correcto del IDL
-const idl = rawIdl as unknown as Idl;
+const idl = rawIdl as Idl;
 
 // 👇 Constantes necesarias
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
