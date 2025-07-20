@@ -6,7 +6,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idl from './idl/pumpfun.json';  // <-- Aquí está el cambio
+import idl from './idl/pumpfun.json';  // <-- Asegúrate de que esta ruta sea correcta
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 
@@ -27,7 +27,11 @@ export const createTokenOnChain = async ({
   const connection = new Connection(network, opts.preflightCommitment as any);
 
   // @ts-ignore
-  const wallet = window.solana;
+  const wallet = window?.solana;
+
+  if (!wallet) {
+    throw new Error('Wallet not found. Please install a Solana wallet like Phantom.');
+  }
 
   const provider = new AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
