@@ -1,6 +1,18 @@
-import { AnchorProvider, BN, Program, Idl, Wallet, web3 } from "@coral-xyz/anchor";
+import {
+  AnchorProvider,
+  BN,
+  Program,
+  Idl,
+  Wallet,
+  web3,
+} from "@coral-xyz/anchor";
 import rawIdl from "./idl/pumpfun.json";
-import { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -11,14 +23,22 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
-const idl = rawIdl as unknown as Idl;
+const idl = rawIdl as Idl;
 
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
 const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x");
 
-export async function launchToken(decimals: number, amount: number, wallet: Wallet) {
+export async function launchToken(
+  decimals: number,
+  amount: number,
+  wallet: Wallet
+) {
   const connection = new Connection("https://api.devnet.solana.com");
-  const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+  const provider = new AnchorProvider(
+    connection,
+    wallet,
+    AnchorProvider.defaultOptions()
+  );
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
@@ -55,11 +75,16 @@ export async function launchToken(decimals: number, amount: number, wallet: Wall
       }),
       createInitializeMintInstruction(mint, decimals, user, user),
       createAssociatedTokenAccountInstruction(user, tokenAccount, user, mint),
-      createAssociatedTokenAccountInstruction(user, feeTokenAccount, feeReceiver, mint),
+      createAssociatedTokenAccountInstruction(
+        user,
+        feeTokenAccount,
+        feeReceiver,
+        mint
+      ),
     ])
     .signers([mintKeypair])
     .rpc();
 
-  console.log("Token lanzado con éxito, tx:", tx);
+  console.log("✅ Token lanzado con éxito, tx:", tx);
   return tx;
 }
