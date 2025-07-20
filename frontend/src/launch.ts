@@ -36,7 +36,7 @@ export async function launchToken(
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(
     connection,
-    wallet,
+    wallet as any, // <-- aquí el cambio importante
     AnchorProvider.defaultOptions()
   );
   const program = new Program(idl, programID, provider);
