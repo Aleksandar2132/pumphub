@@ -34,6 +34,7 @@ export async function launchToken(
   wallet: Wallet
 ) {
   const connection = new Connection("https://api.devnet.solana.com");
+  // Aquí creamos el provider correctamente, usando wallet completo, no wallet.publicKey
   const provider = new AnchorProvider(
     connection,
     wallet,
@@ -42,6 +43,7 @@ export async function launchToken(
 
   if (!provider.wallet.publicKey) throw new Error("Provider wallet no válida");
 
+  // Ahora sí, pasamos el provider correcto a Program
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
