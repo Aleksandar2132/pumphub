@@ -1,33 +1,29 @@
 import React from "react";
-import { useWallet } from "@solana/wallet-adapter-react"; // o el wallet que uses
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
-import { launchToken } from "../launch"; // importa la función de launchToken
+import { AnchorProvider } from "@coral-xyz/anchor";
+import { launchToken } from "../launch";
+import { getAnchorWallet } from "../utils/getAnchorWallet";
 
-export default function LaunchButton() {
+export function LaunchButton() {
   const wallet = useWallet();
 
-  async function handleLaunch() {
-    if (!wallet.connected) {
-      alert("Conecta tu wallet primero");
+  const handleLaunch = async () => {
+    const anchorWallet = getAnchorWallet(wallet);
+    if (!anchorWallet) {
+      alert("Wallet no está conectada o lista");
       return;
     }
 
-    const connection = new Connection("https://api.devnet.solana.com");
-    const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
+    // Nota: No es necesario crear 'provider' aquí, lo creas dentro de launchToken
 
     try {
-      const tx = await launchToken(9, 1000, provider);
-      alert(`Token lanzado! Tx: ${tx}`);
+      const tx = await launchToken(9, 1000, anchorWallet); // <-- PASAMOS anchorWallet aquí
+      console.log("Token lanzado con tx:", tx);
     } catch (error) {
-      console.error(error);
-      alert("Error lanzando token");
+      console.error("Error lanzando token:", error);
     }
-  }
+  };
 
-  return (
-    <button onClick={handleLaunch} disabled={!wallet.connected}>
-      Lanzar Token
-    </button>
-  );
+  return <button onClick={handleLaunch}>Lanzar Token</button>;
 }
