@@ -32,15 +32,19 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, opts.preflightCommitment as any);
 
-  // @ts-ignore
-  const solana = window?.solana;
+  const solana =
+    typeof window !== 'undefined' ? (window as any).solana : null;
 
-  if (!solana || !solana.isPhantom) {
+  if (!solana?.isPhantom) {
     throw new Error('Phantom wallet not found');
   }
 
-  if (!solana.publicKey) {
-    throw new Error('Wallet not connected');
+  if (
+    !solana.publicKey ||
+    !solana.signTransaction ||
+    !solana.signAllTransactions
+  ) {
+    throw new Error('Phantom wallet not fully available');
   }
 
   const wallet: PhantomWallet = {
