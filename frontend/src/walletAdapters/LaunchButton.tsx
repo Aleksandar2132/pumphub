@@ -1,6 +1,7 @@
+import React from "react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
-import { launchToken } from "../launch";
+import { launchToken } from "./launch";
 
 const LaunchButton = () => {
   const anchorWallet = useAnchorWallet();
@@ -29,7 +30,10 @@ const LaunchButton = () => {
   };
 
   return (
-    <button onClick={handleLaunch}>
+    <button
+      onClick={handleLaunch}
+      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl mt-4"
+    >
       Launch Token 🚀
     </button>
   );
