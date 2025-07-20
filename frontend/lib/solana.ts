@@ -38,7 +38,7 @@ export const createTokenOnChain = async ({
   }
 
   const wallet: Wallet = {
-    publicKey: solana.publicKey,
+    publicKey: new PublicKey(solana.publicKey.toString()),
     signAllTransactions: solana.signAllTransactions.bind(solana),
     signTransaction: solana.signTransaction.bind(solana),
   };
