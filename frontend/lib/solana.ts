@@ -1,15 +1,14 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
-import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, web3, Wallet } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idl from './idl/pumpfun.json';  // <-- Asegúrate de que esta ruta sea correcta
+import idl from './idl/pumpfun.json';  // Asegúrate de que esta ruta sea correcta
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
-
 const network = 'https://api.devnet.solana.com';
 const opts = { preflightCommitment: 'processed' };
 
@@ -27,11 +26,18 @@ export const createTokenOnChain = async ({
   const connection = new Connection(network, opts.preflightCommitment as any);
 
   // @ts-ignore
-  const wallet = window?.solana;
+  const solana = window?.solana;
 
-  if (!wallet) {
-    throw new Error('Wallet not found. Please install a Solana wallet like Phantom.');
+  if (!solana || !solana.isPhantom) {
+    throw new Error('Phantom wallet not found');
   }
+
+  // 👇 Wrapper que convierte solana en tipo Wallet
+  const wallet: Wallet = {
+    publicKey: solana.publicKey,
+    signAllTransactions: solana.signAllTransactions.bind(solana),
+    signTransaction: solana.signTransaction.bind(solana),
+  };
 
   const provider = new AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
