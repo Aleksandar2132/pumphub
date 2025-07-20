@@ -1,19 +1,26 @@
-import { Wallet as AnchorWallet } from "@coral-xyz/anchor";
-import { WalletContextState } from "@solana/wallet-adapter-react";
+import {
+  WalletContextState,
+} from "@solana/wallet-adapter-react";
+import {
+  AnchorWallet,
+} from "@coral-xyz/anchor";
 
+/**
+ * Convierte el contexto de wallet en un AnchorWallet
+ */
 export function getAnchorWallet(wallet: WalletContextState): AnchorWallet | null {
   if (
-    !wallet ||
-    !wallet.publicKey ||
-    !wallet.signTransaction ||
-    !wallet.signAllTransactions
+    wallet &&
+    wallet.publicKey &&
+    wallet.signAllTransactions &&
+    wallet.signTransaction
   ) {
-    return null;
+    return {
+      publicKey: wallet.publicKey,
+      signAllTransactions: wallet.signAllTransactions,
+      signTransaction: wallet.signTransaction,
+    };
   }
 
-  return {
-    publicKey: wallet.publicKey,
-    signTransaction: wallet.signTransaction,
-    signAllTransactions: wallet.signAllTransactions,
-  };
+  return null;
 }

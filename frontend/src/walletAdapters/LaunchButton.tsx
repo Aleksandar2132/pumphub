@@ -1,17 +1,19 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { launchToken } from "./launch";
+import { getAnchorWallet } from "./utils/getAnchorWallet";
 
 const LaunchButton = () => {
   const wallet = useWallet();
 
   const handleLaunch = async () => {
-    if (!wallet.connected || !wallet.publicKey) {
+    const anchorWallet = getAnchorWallet(wallet);
+    if (!anchorWallet) {
       alert("Conecta tu wallet primero");
       return;
     }
 
     try {
-      const tx = await launchToken(9, 1_000_000_000, wallet);
+      const tx = await launchToken(9, 1_000_000_000, anchorWallet);
       console.log("Transacción:", tx);
       alert("✅ Token lanzado: " + tx);
     } catch (err) {
