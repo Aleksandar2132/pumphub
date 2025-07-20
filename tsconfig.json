@@ -18,8 +18,9 @@
         "name": "next"
       }
     ],
+    "baseUrl": "./frontend",            // <-- Aquí lo agregas
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["*"]                     // <-- Y aquí lo cambias
     }
   },
   "include": [

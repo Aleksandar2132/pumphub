@@ -6,10 +6,8 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idl from '@/lib/idl/pumpfun.json';
-// Asegúrate de que esté en: frontend/lib/idl/pumpfun.json
+import idl from './idl/pumpfun.json';  // <-- Aquí está el cambio
 
-// 👇 Usa tu Program ID real que te dio `anchor deploy`
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 
 const network = 'https://api.devnet.solana.com';
