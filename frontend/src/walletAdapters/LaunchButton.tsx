@@ -1,7 +1,7 @@
 import React from "react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
-import { launchToken } from "./launch";
+import { launchToken } from "../launch";
 
 const LaunchButton = () => {
   const anchorWallet = useAnchorWallet();
