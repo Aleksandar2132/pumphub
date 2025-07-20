@@ -33,11 +33,15 @@ export const createTokenOnChain = async ({
   }
 
   // 👇 Wrapper que convierte solana en tipo Wallet
-  const wallet: Wallet = {
-    publicKey: solana.publicKey,
-    signAllTransactions: solana.signAllTransactions.bind(solana),
-    signTransaction: solana.signTransaction.bind(solana),
-  };
+  if (!solana.publicKey) {
+  throw new Error('Wallet not connected');
+}
+
+const wallet: Wallet = {
+  publicKey: solana.publicKey,
+  signAllTransactions: solana.signAllTransactions.bind(solana),
+  signTransaction: solana.signTransaction.bind(solana),
+};
 
   const provider = new AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
