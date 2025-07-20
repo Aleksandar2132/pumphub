@@ -57,7 +57,13 @@ export const createTokenOnChain = async ({
   const provider = new AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  const program = new Program(idl as anchor.Idl, programID, provider);
+  // Aquí corregimos el error agregando la propiedad 'address' al IDL
+  const idlWithAddress = {
+    ...idl,
+    address: programID.toString(),
+  };
+
+  const program = new Program(idlWithAddress as anchor.Idl, programID, provider);
   const mintKeypair = web3.Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
