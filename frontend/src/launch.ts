@@ -11,16 +11,14 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
-// 👇 Cast seguro para evitar errores de compilación
+// 👇 Cast seguro al IDL para evitar errores de tipo
 const idl = rawIdl as unknown as Idl;
 
-// 👇 Constantes necesarias
+// 👇 Constantes del programa
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
 const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x");
 
-export async function launchToken(wallet: Wallet, decimals: number, amount: number) {
-  if (!wallet.publicKey) throw new Error("Wallet no conectada");
-
+export async function launchToken(decimals: number, amount: number, wallet: Wallet) {
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions());
 
@@ -29,7 +27,10 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
 
-  const tokenAccount = await getAssociatedTokenAddress(mint, wallet.publicKey);
+  const user = provider.wallet.publicKey;
+  if (!user) throw new Error("Wallet no conectada");
+
+  const tokenAccount = await getAssociatedTokenAddress(mint, user);
   const feeTokenAccount = await getAssociatedTokenAddress(mint, feeReceiver);
 
   const rent = await getMinimumBalanceForRentExemptMint(connection);
@@ -37,7 +38,7 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
   const tx = await program.methods
     .launchToken(decimals, new BN(amount))
     .accounts({
-      authority: wallet.publicKey,
+      authority: user,
       mint,
       tokenAccount,
       feeTokenAccount,
@@ -49,15 +50,15 @@ export async function launchToken(wallet: Wallet, decimals: number, amount: numb
     })
     .preInstructions([
       SystemProgram.createAccount({
-        fromPubkey: wallet.publicKey,
+        fromPubkey: user,
         newAccountPubkey: mint,
         space: MINT_SIZE,
         lamports: rent,
         programId: TOKEN_PROGRAM_ID,
       }),
-      createInitializeMintInstruction(mint, decimals, wallet.publicKey, wallet.publicKey),
-      createAssociatedTokenAccountInstruction(wallet.publicKey, tokenAccount, wallet.publicKey, mint),
-      createAssociatedTokenAccountInstruction(wallet.publicKey, feeTokenAccount, feeReceiver, mint),
+      createInitializeMintInstruction(mint, decimals, user, user),
+      createAssociatedTokenAccountInstruction(user, tokenAccount, user, mint),
+      createAssociatedTokenAccountInstruction(user, feeTokenAccount, feeReceiver, mint),
     ])
     .signers([mintKeypair])
     .rpc();
