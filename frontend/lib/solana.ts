@@ -1,5 +1,5 @@
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
+import { Connection, PublicKey, SystemProgram, Commitment } from '@solana/web3.js';
 import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddress,
@@ -10,7 +10,8 @@ import idl from './idl/pumpfun.json';
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
-const opts = { preflightCommitment: 'processed' };
+const commitment: Commitment = 'processed';
+const opts = { preflightCommitment: commitment };
 
 // ✅ Phantom-compatible wallet type
 type PhantomWallet = {
@@ -30,7 +31,7 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }) => {
-  const connection = new Connection(network, opts.preflightCommitment as any);
+  const connection = new Connection(network, commitment);
 
   const solana =
     typeof window !== 'undefined' ? (window as any).solana : null;
