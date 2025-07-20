@@ -23,7 +23,7 @@ import {
   MINT_SIZE,
 } from "@solana/spl-token";
 
-const idl = rawIdl as Idl;
+const idl = rawIdl as unknown as Idl;
 
 const programID = new PublicKey("FfJxVq3U1hcoNFJVuYyfh1iG6zv7DJrM8pZJQtwM5mT4");
 const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x");
