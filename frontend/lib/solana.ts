@@ -57,7 +57,7 @@ export const createTokenOnChain = async ({
   const provider = new AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  // Aquí corregimos el error agregando la propiedad 'address' al IDL
+  // Corregimos aquí añadiendo la propiedad 'address' para que el tipo Idl sea compatible
   const idlWithAddress = {
     ...idl,
     address: programID.toString(),
