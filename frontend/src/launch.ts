@@ -37,7 +37,8 @@ export async function launchToken(
     throw new Error("Wallet no conectada o inválida.");
   }
 
-  const program = new Program(idl, programID, provider);
+  // Cambia esta línea:
+  const program = new Program(idl, provider);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
