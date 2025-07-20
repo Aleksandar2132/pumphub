@@ -3,7 +3,6 @@ import {
   BN,
   Program,
   Idl,
-  Wallet,
   web3,
 } from "@coral-xyz/anchor";
 import rawIdl from "./idl/pumpfun.json";
@@ -31,7 +30,7 @@ const feeReceiver = new PublicKey("G2H9ZuNWtjmthZ2JJuLkHJ7yNVvRRhp8DhYxWjjN1J6x"
 export async function launchToken(
   decimals: number,
   amount: number,
-  wallet: Wallet
+  wallet: AnchorProvider["wallet"] // ✅ CAMBIO AQUÍ
 ) {
   if (!wallet || !wallet.publicKey) {
     throw new Error("Wallet no conectada o inválida.");
