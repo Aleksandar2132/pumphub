@@ -33,19 +33,24 @@ export async function launchToken(
   amount: number,
   wallet: Wallet
 ) {
+  if (!wallet.publicKey) throw new Error("Wallet no conectada");
+
   const connection = new Connection("https://api.devnet.solana.com");
   const provider = new AnchorProvider(
     connection,
-    wallet as any, // <-- aquí el cambio importante
+    wallet,
     AnchorProvider.defaultOptions()
   );
+  
+  // Verifica que provider es correcto antes de usarlo
+  if (!provider.wallet.publicKey) throw new Error("Provider wallet no válida");
+
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = web3.Keypair.generate();
   const mint = mintKeypair.publicKey;
 
   const user = provider.wallet.publicKey;
-  if (!user) throw new Error("Wallet no conectada");
 
   const tokenAccount = await getAssociatedTokenAddress(mint, user);
   const feeTokenAccount = await getAssociatedTokenAddress(mint, feeReceiver);
