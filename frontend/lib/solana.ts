@@ -6,6 +6,7 @@ import {
   Commitment,
   Keypair,
   Transaction,
+  VersionedTransaction,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
@@ -21,8 +22,8 @@ const opts = { preflightCommitment: commitment };
 
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
-  signTransaction: (tx: Transaction) => Promise<Transaction>;
-  signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
+  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
+  signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
 class AnchorWallet implements anchor.Wallet {
@@ -32,11 +33,11 @@ class AnchorWallet implements anchor.Wallet {
     return this.adapter.publicKey;
   }
 
-  async signTransaction(tx: Transaction): Promise<Transaction> {
+  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
     return this.adapter.signTransaction(tx);
   }
 
-  async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
 }
