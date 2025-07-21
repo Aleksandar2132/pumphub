@@ -36,30 +36,22 @@ export const createTokenOnChain = async ({
 
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
-  class PhantomWalletWrapper implements anchor.Wallet {
-    private _wallet: any;
-    payer: Keypair;
+  await solana.connect();
 
-    constructor(wallet: any) {
-      this._wallet = wallet;
-      this.payer = Keypair.generate(); // No se usa pero es requerido por la clase
-    }
+  const phantomWallet = {
+    publicKey: new PublicKey(solana.publicKey.toString()),
+    signTransaction: async (tx: Transaction | VersionedTransaction) =>
+      await solana.signTransaction(tx),
+    signAllTransactions: async (txs: (Transaction | VersionedTransaction)[]) =>
+      await solana.signAllTransactions(txs),
+  };
 
-    get publicKey(): PublicKey {
-      return this._wallet.publicKey;
-    }
+  const provider = new anchor.AnchorProvider(
+    connection,
+    phantomWallet as anchor.Wallet,
+    opts
+  );
 
-    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
-      return this._wallet.signTransaction(tx);
-    }
-
-    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
-      return this._wallet.signAllTransactions(txs);
-    }
-  }
-
-  const wallet = new PhantomWalletWrapper(solana);
-  const provider = new anchor.AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
