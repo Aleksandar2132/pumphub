@@ -41,10 +41,9 @@ class AnchorWallet implements anchor.Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  // 👇 Agregamos esto para que compile
-get payer(): Keypair {
-  throw new Error('payer not implemented in browser context');
-}
+  get payer(): Keypair {
+    throw new Error('payer not implemented in browser context');
+  }
 }
 
 export const createTokenOnChain = async ({
@@ -73,6 +72,12 @@ export const createTokenOnChain = async ({
 
   const anchorWallet = new AnchorWallet(adapter);
   const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+
+  // Aquí confirmamos que provider es correcto
+  console.log('provider:', provider);
+  console.log('provider.connection:', provider.connection);
+  console.log('provider.wallet:', provider.wallet);
+
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
