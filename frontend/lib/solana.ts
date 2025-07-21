@@ -77,7 +77,7 @@ export const createTokenOnChain = async ({
 
   anchor.setProvider(myAnchorProvider);
 
-  // Aquí es clave que los tipos sean correctos
+  // Aquí se asegura que el tercer argumento es el provider, no un PublicKey
   const program = new anchor.Program(idl, programID, myAnchorProvider);
 
   const mintKeypair = Keypair.generate();
