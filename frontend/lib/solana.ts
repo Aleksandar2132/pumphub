@@ -18,6 +18,12 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
+type PhantomWalletAdapter = {
+  publicKey: PublicKey;
+  signTransaction: (tx: anchor.web3.Transaction) => Promise<anchor.web3.Transaction>;
+  signAllTransactions: (txs: anchor.web3.Transaction[]) => Promise<anchor.web3.Transaction[]>;
+};
+
 export const createTokenOnChain = async ({
   tokenName,
   tokenSymbol,
@@ -36,7 +42,13 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  const provider = new anchor.AnchorProvider(connection, solana, opts);
+  const wallet: PhantomWalletAdapter = {
+    publicKey: new PublicKey(solana.publicKey.toString()),
+    signTransaction: solana.signTransaction.bind(solana),
+    signAllTransactions: solana.signAllTransactions.bind(solana),
+  };
+
+  const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
