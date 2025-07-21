@@ -5,7 +5,9 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idl from './idl/pumpfun.json';
+import rawIdl from './idl/pumpfun.json'; // CAMBIO AQUI
+
+const idl = rawIdl as unknown as anchor.Idl; // SOLUCIÓN CRUCIAL
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
@@ -46,11 +48,7 @@ export const createTokenOnChain = async ({
   const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  const program = new anchor.Program(
-    idl as anchor.Idl,
-    programID,
-    provider
-  );
+  const program = new anchor.Program(idl, programID, provider); // ← YA FUNCIONA
 
   const mintKeypair = anchor.web3.Keypair.generate();
 
