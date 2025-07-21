@@ -13,9 +13,9 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idlJson from '../idl/pumpfun.json'; // Importa el JSON como default
+import idlJson from '../idl/pumpfun.json'; // Ajusta la ruta si hace falta
 
-const idl = idlJson as anchor.Idl; // Asegura el tipo
+const idl = idlJson as anchor.Idl;
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
@@ -61,7 +61,6 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, commitment);
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
-
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
   await solana.connect();
@@ -77,24 +76,61 @@ export const createTokenOnChain = async ({
 
   anchor.setProvider(myAnchorProvider);
 
-  // Aquí se asegura que el tercer argumento es el provider, no un PublicKey
   const program = new anchor.Program(idl, programID, myAnchorProvider);
 
   const mintKeypair = Keypair.generate();
 
+  // Crear cuenta mint con rent exención y inicializarla
+  const lamports = await connection.getMinimumBalanceForRentExemption(
+    anchor.web3.MintLayout.span
+  );
+
+  const tx = new anchor.web3.Transaction();
+
+  tx.add(
+    SystemProgram.createAccount({
+      fromPubkey: myAnchorProvider.wallet.publicKey,
+      newAccountPubkey: mintKeypair.publicKey,
+      space: anchor.web3.MintLayout.span,
+      lamports,
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    anchor.web3.Token.createInitMintInstruction(
+      TOKEN_PROGRAM_ID,
+      mintKeypair.publicKey,
+      9, // decimals
+      myAnchorProvider.wallet.publicKey,
+      null
+    )
+  );
+
+  await myAnchorProvider.sendAndConfirm(tx, [mintKeypair]);
+
+  // Obtener cuentas asociadas para token y feeReceiver
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
     myAnchorProvider.wallet.publicKey
   );
 
+  const feeReceiverPubkey = new PublicKey(walletAddress);
+
+  const feeTokenAccount = await getAssociatedTokenAddress(
+    mintKeypair.publicKey,
+    feeReceiverPubkey
+  );
+
+  // Multiplicar tokenSupply por 10^9 para ajustar decimales
+  const supplyBN = new anchor.BN(tokenSupply * 10 ** 9);
+
+  // Llamar al método launchToken
   await program.methods
-    .launchToken(9, new anchor.BN(tokenSupply))
+    .launchToken(9, supplyBN)
     .accounts({
       authority: myAnchorProvider.wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
-      feeTokenAccount: tokenAccount,
-      feeReceiver: new PublicKey(walletAddress),
+      feeTokenAccount,
+      feeReceiver: feeReceiverPubkey,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
