@@ -48,10 +48,10 @@ export const createTokenOnChain = async ({
     },
   };
 
-  const provider = new anchor.AnchorProvider(connection, phantomWallet as any, opts);
+  const provider = new anchor.AnchorProvider(connection, phantomWallet as anchor.Wallet, opts);
   anchor.setProvider(provider);
 
-  const program = new anchor.Program(idl as anchor.Idl, programID, provider);
+  const program = new anchor.Program(idl as anchor.Idl, programID, anchor.getProvider() as anchor.AnchorProvider);
 
   const mintKeypair = Keypair.generate();
 
