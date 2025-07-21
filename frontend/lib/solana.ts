@@ -38,15 +38,7 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  const anchorWallet: anchor.Wallet = {
-    publicKey: new PublicKey(solana.publicKey.toString()),
-    signTransaction: (tx: Transaction | VersionedTransaction) =>
-      solana.signTransaction(tx),
-    signAllTransactions: (txs: (Transaction | VersionedTransaction)[]) =>
-      solana.signAllTransactions(txs),
-  };
-
-  const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+  const provider = new anchor.AnchorProvider(connection, solana, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
@@ -55,13 +47,13 @@ export const createTokenOnChain = async ({
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    anchorWallet.publicKey
+    provider.wallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: anchorWallet.publicKey,
+      authority: provider.wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
