@@ -51,7 +51,8 @@ export const createTokenOnChain = async ({
   };
 
   const anchorProvider = new anchor.AnchorProvider(connection, wallet as any, opts);
-  // anchor.setProvider(anchorProvider); // Opcional, no necesario
+  console.log('anchorProvider:', anchorProvider);
+  console.log('programID:', programID);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, anchorProvider);
 
