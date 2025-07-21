@@ -56,7 +56,7 @@ export const createTokenOnChain = async ({
   const provider = new AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  // ✅ Corregido: extendemos metadata con los campos requeridos
+  // ✅ Compatibilidad para evitar error de tipos sin romper lógica
   const idlWithAddress = {
     ...idl,
     address: programID.toString(),
@@ -69,7 +69,8 @@ export const createTokenOnChain = async ({
     },
   };
 
-  const program = new Program(idlWithAddress as anchor.Idl, programID, provider);
+  // ✅ Fix final con "unknown as Idl"
+  const program = new Program(idlWithAddress as unknown as anchor.Idl, programID, provider);
   const mintKeypair = web3.Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
