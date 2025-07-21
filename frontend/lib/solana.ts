@@ -38,7 +38,7 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  const phantomWallet: anchor.Wallet = {
+  const phantomWallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
     async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
       return await solana.signTransaction(tx);
@@ -48,7 +48,7 @@ export const createTokenOnChain = async ({
     },
   };
 
-  const provider = new anchor.AnchorProvider(connection, phantomWallet, opts);
+  const provider = new anchor.AnchorProvider(connection, phantomWallet as any, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
