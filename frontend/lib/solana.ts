@@ -50,10 +50,13 @@ export const createTokenOnChain = async ({
     signAllTransactions: async (txs) => await solana.signAllTransactions(txs),
   };
 
+  // Aquí se crea correctamente el AnchorProvider
   const anchorProvider = new anchor.AnchorProvider(connection, wallet as any, opts);
-  console.log('anchorProvider:', anchorProvider);
-  console.log('programID:', programID);
 
+  // Este console.log te ayuda a verificar que no sea un PublicKey
+  console.log('anchorProvider:', anchorProvider);
+
+  // Ya con AnchorProvider correcto, creamos el programa
   const program = new anchor.Program(idl as anchor.Idl, programID, anchorProvider);
 
   const mintKeypair = Keypair.generate();
