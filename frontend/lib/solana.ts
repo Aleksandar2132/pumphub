@@ -38,17 +38,18 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  const phantomWallet = {
+  // Objeto wallet compatible con AnchorProvider
+  const wallet: anchor.Wallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
-    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+    signTransaction: async (tx: Transaction | VersionedTransaction) => {
       return await solana.signTransaction(tx);
     },
-    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+    signAllTransactions: async (txs: (Transaction | VersionedTransaction)[]) => {
       return await solana.signAllTransactions(txs);
     },
   };
 
-  const provider = new anchor.AnchorProvider(connection, phantomWallet as anchor.Wallet, opts);
+  const provider = new anchor.AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
