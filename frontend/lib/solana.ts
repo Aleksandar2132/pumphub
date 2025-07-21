@@ -38,8 +38,7 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  // Adaptamos el wallet para que cumpla con la interfaz Wallet de Anchor
-  const wallet = {
+  const anchorWallet: anchor.Wallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
     signTransaction: (tx: Transaction | VersionedTransaction) =>
       solana.signTransaction(tx),
@@ -47,17 +46,8 @@ export const createTokenOnChain = async ({
       solana.signAllTransactions(txs),
   };
 
-  // Creamos un AnchorWallet válido extendiendo AnchorWallet
-  const anchorWallet: anchor.Wallet = {
-    ...wallet,
-    signMessage: async (msg: Uint8Array) => {
-      if (!solana.signMessage) throw new Error('signMessage no disponible');
-      return solana.signMessage(msg);
-    },
-  };
-
   const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
-  anchor.setProvider(provider); // opcional, pero recomendado
+  anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
 
