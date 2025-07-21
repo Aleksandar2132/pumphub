@@ -33,8 +33,7 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, commitment);
 
-  const solana =
-    typeof window !== 'undefined' ? (window as any).solana : null;
+  const solana = typeof window !== 'undefined' ? (window as any).solana : null;
 
   if (!solana?.isPhantom) {
     throw new Error('Phantom wallet not found');
@@ -57,10 +56,17 @@ export const createTokenOnChain = async ({
   const provider = new AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  // Corregimos aquí añadiendo la propiedad 'address' para que el tipo Idl sea compatible
+  // ✅ Corregido: extendemos metadata con los campos requeridos
   const idlWithAddress = {
     ...idl,
     address: programID.toString(),
+    metadata: {
+      ...(idl.metadata || {}),
+      name: idl.name || 'pumpfun',
+      version: '0.1.0',
+      spec: 'anchor',
+      address: programID.toString(),
+    },
   };
 
   const program = new Program(idlWithAddress as anchor.Idl, programID, provider);
