@@ -1,5 +1,5 @@
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
+import { Connection, PublicKey, SystemProgram, Commitment } from '@solana/web3.js';
 import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddress,
@@ -10,7 +10,15 @@ import idl from './idl/pumpfun.json';
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
-const opts = { preflightCommitment: 'processed' };
+const commitment: Commitment = 'processed';
+const opts = { preflightCommitment: commitment };
+
+// ✅ Phantom-compatible wallet type
+type PhantomWallet = {
+  publicKey: PublicKey;
+  signTransaction: (tx: web3.Transaction) => Promise<web3.Transaction>;
+  signAllTransactions: (txs: web3.Transaction[]) => Promise<web3.Transaction[]>;
+};
 
 export const createTokenOnChain = async ({
   tokenName,
@@ -23,14 +31,32 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }) => {
-  const connection = new Connection(network, opts.preflightCommitment as any);
+  const connection = new Connection(network, commitment);
 
-  // @ts-ignore
-  const wallet = window.solana;
+  const solana = typeof window !== 'undefined' ? (window as any).solana : null;
 
-  const provider = new AnchorProvider(connection, wallet, opts);
+  if (!solana?.isPhantom) {
+    throw new Error('Phantom wallet not found');
+  }
+
+  if (
+    !solana.publicKey ||
+    !solana.signTransaction ||
+    !solana.signAllTransactions
+  ) {
+    throw new Error('Phantom wallet not fully available');
+  }
+
+  const wallet: PhantomWallet = {
+    publicKey: new PublicKey(solana.publicKey.toString()),
+    signTransaction: solana.signTransaction.bind(solana),
+    signAllTransactions: solana.signAllTransactions.bind(solana),
+  };
+
+  const provider = new AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
+  // ✅ Compatibilidad para evitar error de tipos sin romper lógica
   const idlWithAddress = {
     ...idl,
     address: programID.toString(),
@@ -43,6 +69,7 @@ export const createTokenOnChain = async ({
     },
   };
 
+  // ✅ Fix final con "unknown as Idl"
   const program = new Program(idlWithAddress as unknown as anchor.Idl, programID, provider);
   const mintKeypair = web3.Keypair.generate();
 
