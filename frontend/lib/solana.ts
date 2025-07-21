@@ -40,6 +40,11 @@ class AnchorWallet implements anchor.Wallet {
   signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
+
+  // 👇 Agregamos esto para que compile
+  get payer(): PublicKey {
+    return this.adapter.publicKey;
+  }
 }
 
 export const createTokenOnChain = async ({
