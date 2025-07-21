@@ -20,6 +20,12 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
+type BrowserWallet = {
+  publicKey: PublicKey;
+  signTransaction: (tx: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
+  signAllTransactions: (txs: (Transaction | VersionedTransaction)[]) => Promise<(Transaction | VersionedTransaction)[]>;
+};
+
 export const createTokenOnChain = async ({
   tokenName,
   tokenSymbol,
@@ -38,18 +44,13 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  // Objeto wallet compatible con AnchorProvider
-  const wallet: anchor.Wallet = {
+  const wallet: BrowserWallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
-    signTransaction: async (tx: Transaction | VersionedTransaction) => {
-      return await solana.signTransaction(tx);
-    },
-    signAllTransactions: async (txs: (Transaction | VersionedTransaction)[]) => {
-      return await solana.signAllTransactions(txs);
-    },
+    signTransaction: async (tx) => await solana.signTransaction(tx),
+    signAllTransactions: async (txs) => await solana.signAllTransactions(txs),
   };
 
-  const provider = new anchor.AnchorProvider(connection, wallet, opts);
+  const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
@@ -58,13 +59,13 @@ export const createTokenOnChain = async ({
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    provider.wallet.publicKey
+    wallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: provider.wallet.publicKey,
+      authority: wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
