@@ -20,12 +20,6 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-type BrowserWallet = {
-  publicKey: PublicKey;
-  signTransaction: (tx: Transaction | VersionedTransaction) => Promise<Transaction | VersionedTransaction>;
-  signAllTransactions: (txs: (Transaction | VersionedTransaction)[]) => Promise<(Transaction | VersionedTransaction)[]>;
-};
-
 export const createTokenOnChain = async ({
   tokenName,
   tokenSymbol,
@@ -44,32 +38,40 @@ export const createTokenOnChain = async ({
 
   await solana.connect();
 
-  const wallet: BrowserWallet = {
+  // Adaptamos el wallet para que cumpla con la interfaz Wallet de Anchor
+  const wallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
-    signTransaction: async (tx) => await solana.signTransaction(tx),
-    signAllTransactions: async (txs) => await solana.signAllTransactions(txs),
+    signTransaction: (tx: Transaction | VersionedTransaction) =>
+      solana.signTransaction(tx),
+    signAllTransactions: (txs: (Transaction | VersionedTransaction)[]) =>
+      solana.signAllTransactions(txs),
   };
 
-  // Aquí se crea correctamente el AnchorProvider
-  const anchorProvider = new anchor.AnchorProvider(connection, wallet as any, opts);
+  // Creamos un AnchorWallet válido extendiendo AnchorWallet
+  const anchorWallet: anchor.Wallet = {
+    ...wallet,
+    signMessage: async (msg: Uint8Array) => {
+      if (!solana.signMessage) throw new Error('signMessage no disponible');
+      return solana.signMessage(msg);
+    },
+  };
 
-  // Este console.log te ayuda a verificar que no sea un PublicKey
-  console.log('anchorProvider:', anchorProvider);
+  const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+  anchor.setProvider(provider); // opcional, pero recomendado
 
-  // Ya con AnchorProvider correcto, creamos el programa
-  const program = new anchor.Program(idl as anchor.Idl, programID, anchorProvider);
+  const program = new anchor.Program(idl as anchor.Idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    wallet.publicKey
+    anchorWallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: wallet.publicKey,
+      authority: anchorWallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
