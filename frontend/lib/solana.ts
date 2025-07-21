@@ -73,20 +73,9 @@ export const createTokenOnChain = async ({
   const anchorWallet = new AnchorWallet(adapter);
   const myAnchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
 
-  // Para depurar:
-  console.log('myAnchorProvider:', myAnchorProvider);
-  console.log('myAnchorProvider.connection:', myAnchorProvider.connection);
-  console.log('myAnchorProvider.wallet:', myAnchorProvider.wallet);
-
   anchor.setProvider(myAnchorProvider);
 
-  const anchorWallet = new AnchorWallet(adapter);
-const myAnchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
-
-anchor.setProvider(myAnchorProvider);
-
-const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
-
+  const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
 
   const mintKeypair = Keypair.generate();
 
