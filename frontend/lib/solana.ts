@@ -5,8 +5,6 @@ import {
   SystemProgram,
   Commitment,
   Keypair,
-  Transaction,
-  VersionedTransaction,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
@@ -56,6 +54,8 @@ export const createTokenOnChain = async ({
       authority: provider.wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
+      feeTokenAccount: tokenAccount,
+      feeReceiver: new PublicKey(walletAddress),
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
