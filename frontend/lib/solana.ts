@@ -5,6 +5,8 @@ import {
   SystemProgram,
   Commitment,
   Keypair,
+  Transaction,
+  VersionedTransaction,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
@@ -36,13 +38,16 @@ export const createTokenOnChain = async ({
 
   class PhantomWalletWrapper implements anchor.Wallet {
     public publicKey: PublicKey;
+
     constructor(public wallet: any) {
       this.publicKey = wallet.publicKey;
     }
-    async signTransaction(tx: anchor.web3.Transaction): Promise<anchor.web3.Transaction> {
+
+    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
       return this.wallet.signTransaction(tx);
     }
-    async signAllTransactions(txs: anchor.web3.Transaction[]): Promise<anchor.web3.Transaction[]> {
+
+    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
       return this.wallet.signAllTransactions(txs);
     }
   }
