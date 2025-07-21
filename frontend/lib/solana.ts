@@ -80,7 +80,13 @@ export const createTokenOnChain = async ({
 
   anchor.setProvider(myAnchorProvider);
 
-  const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
+  const anchorWallet = new AnchorWallet(adapter);
+const myAnchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+
+anchor.setProvider(myAnchorProvider);
+
+const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
+
 
   const mintKeypair = Keypair.generate();
 
