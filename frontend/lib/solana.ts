@@ -1,13 +1,17 @@
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, PublicKey, SystemProgram, Commitment } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  Commitment,
+  Keypair,
+} from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import rawIdl from './idl/pumpfun.json'; // CAMBIO AQUI
-
-const idl = rawIdl as unknown as anchor.Idl; // SOLUCIÓN CRUCIAL
+import idl from '../idl/pumpfun.json';
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
@@ -35,9 +39,6 @@ export const createTokenOnChain = async ({
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
 
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
-  if (!solana.publicKey || !solana.signTransaction || !solana.signAllTransactions) {
-    throw new Error('Phantom wallet not fully available');
-  }
 
   const wallet: PhantomWallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
@@ -48,19 +49,19 @@ export const createTokenOnChain = async ({
   const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  const program = new anchor.Program(idl, programID, provider); // ← YA FUNCIONA
+  const program = new anchor.Program(idl as anchor.Idl, programID, provider);
 
-  const mintKeypair = anchor.web3.Keypair.generate();
+  const mintKeypair = Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    wallet.publicKey
+    provider.wallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: wallet.publicKey,
+      authority: provider.wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
