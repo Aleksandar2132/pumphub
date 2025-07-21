@@ -13,7 +13,9 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import idl from '../idl/pumpfun.json';
+import idlJson from '../idl/pumpfun.json'; // Importa el JSON como default
+
+const idl = idlJson as anchor.Idl; // Asegura el tipo
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
@@ -75,7 +77,8 @@ export const createTokenOnChain = async ({
 
   anchor.setProvider(myAnchorProvider);
 
-  const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
+  // Aquí es clave que los tipos sean correctos
+  const program = new anchor.Program(idl, programID, myAnchorProvider);
 
   const mintKeypair = Keypair.generate();
 
