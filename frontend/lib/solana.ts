@@ -1,6 +1,5 @@
 import * as anchor from '@coral-xyz/anchor';
 import { Connection, PublicKey, SystemProgram, Commitment } from '@solana/web3.js';
-import { AnchorProvider, Program, web3 } from '@coral-xyz/anchor';
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -13,11 +12,10 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-// ✅ Phantom-compatible wallet type
 type PhantomWallet = {
   publicKey: PublicKey;
-  signTransaction: (tx: web3.Transaction) => Promise<web3.Transaction>;
-  signAllTransactions: (txs: web3.Transaction[]) => Promise<web3.Transaction[]>;
+  signTransaction: (tx: anchor.web3.Transaction) => Promise<anchor.web3.Transaction>;
+  signAllTransactions: (txs: anchor.web3.Transaction[]) => Promise<anchor.web3.Transaction[]>;
 };
 
 export const createTokenOnChain = async ({
@@ -32,18 +30,10 @@ export const createTokenOnChain = async ({
   walletAddress: string;
 }) => {
   const connection = new Connection(network, commitment);
-
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
 
-  if (!solana?.isPhantom) {
-    throw new Error('Phantom wallet not found');
-  }
-
-  if (
-    !solana.publicKey ||
-    !solana.signTransaction ||
-    !solana.signAllTransactions
-  ) {
+  if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
+  if (!solana.publicKey || !solana.signTransaction || !solana.signAllTransactions) {
     throw new Error('Phantom wallet not fully available');
   }
 
@@ -53,25 +43,16 @@ export const createTokenOnChain = async ({
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
-  const provider = new AnchorProvider(connection, wallet as any, opts);
+  const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
   anchor.setProvider(provider);
 
-  // ✅ Compatibilidad para evitar error de tipos sin romper lógica
-  const idlWithAddress = {
-    ...idl,
-    address: programID.toString(),
-    metadata: {
-      ...(idl.metadata || {}),
-      name: idl.name || 'pumpfun',
-      version: '0.1.0',
-      spec: 'anchor',
-      address: programID.toString(),
-    },
-  };
+  const program = new anchor.Program(
+    idl as anchor.Idl,
+    programID,
+    provider
+  );
 
-  // ✅ Fix final con "unknown as Idl"
-  const program = new Program(idlWithAddress as unknown as anchor.Idl, programID, provider);
-  const mintKeypair = web3.Keypair.generate();
+  const mintKeypair = anchor.web3.Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
@@ -83,11 +64,11 @@ export const createTokenOnChain = async ({
     .accounts({
       authority: provider.wallet.publicKey,
       mint: mintKeypair.publicKey,
-      tokenAccount: tokenAccount,
+      tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
-      rent: web3.SYSVAR_RENT_PUBKEY,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
     })
     .signers([mintKeypair])
     .rpc();
