@@ -18,12 +18,6 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-type PhantomWallet = {
-  publicKey: PublicKey;
-  signTransaction: (tx: anchor.web3.Transaction) => Promise<anchor.web3.Transaction>;
-  signAllTransactions: (txs: anchor.web3.Transaction[]) => Promise<anchor.web3.Transaction[]>;
-};
-
 export const createTokenOnChain = async ({
   tokenName,
   tokenSymbol,
@@ -40,13 +34,21 @@ export const createTokenOnChain = async ({
 
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
-  const wallet: PhantomWallet = {
-    publicKey: new PublicKey(solana.publicKey.toString()),
-    signTransaction: solana.signTransaction.bind(solana),
-    signAllTransactions: solana.signAllTransactions.bind(solana),
-  };
+  class PhantomWalletWrapper implements anchor.Wallet {
+    public publicKey: PublicKey;
+    constructor(public wallet: any) {
+      this.publicKey = wallet.publicKey;
+    }
+    async signTransaction(tx: anchor.web3.Transaction): Promise<anchor.web3.Transaction> {
+      return this.wallet.signTransaction(tx);
+    }
+    async signAllTransactions(txs: anchor.web3.Transaction[]): Promise<anchor.web3.Transaction[]> {
+      return this.wallet.signAllTransactions(txs);
+    }
+  }
 
-  const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
+  const wallet = new PhantomWalletWrapper(solana);
+  const provider = new anchor.AnchorProvider(connection, wallet, opts);
   anchor.setProvider(provider);
 
   const program = new anchor.Program(idl as anchor.Idl, programID, provider);
