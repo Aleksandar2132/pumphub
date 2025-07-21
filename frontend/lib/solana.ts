@@ -71,28 +71,28 @@ export const createTokenOnChain = async ({
   };
 
   const anchorWallet = new AnchorWallet(adapter);
-  const anchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+  const myAnchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
 
   // Para depurar:
-  console.log('anchorProvider:', anchorProvider);
-  console.log('anchorProvider.connection:', anchorProvider.connection);
-  console.log('anchorProvider.wallet:', anchorProvider.wallet);
+  console.log('myAnchorProvider:', myAnchorProvider);
+  console.log('myAnchorProvider.connection:', myAnchorProvider.connection);
+  console.log('myAnchorProvider.wallet:', myAnchorProvider.wallet);
 
-  anchor.setProvider(anchorProvider);
+  anchor.setProvider(myAnchorProvider);
 
-  const program = new anchor.Program(idl as anchor.Idl, programID, anchorProvider);
+  const program = new anchor.Program(idl as anchor.Idl, programID, myAnchorProvider);
 
   const mintKeypair = Keypair.generate();
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    anchorProvider.wallet.publicKey
+    myAnchorProvider.wallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: anchorProvider.wallet.publicKey,
+      authority: myAnchorProvider.wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       feeTokenAccount: tokenAccount,
