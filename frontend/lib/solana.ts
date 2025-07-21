@@ -6,14 +6,16 @@ import {
   Commitment,
   Keypair,
   Transaction,
-  VersionedTransaction,
+  sendAndConfirmTransaction,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  createInitializeMintInstruction,
+  MINT_SIZE,
 } from '@solana/spl-token';
-import idlJson from '../idl/pumpfun.json'; // Ajusta la ruta si hace falta
+import idlJson from '../idl/pumpfun.json';
 
 const idl = idlJson as anchor.Idl;
 
@@ -24,8 +26,8 @@ const opts = { preflightCommitment: commitment };
 
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
-  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
-  signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
+  signTransaction: (tx: Transaction) => Promise<Transaction>;
+  signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
 };
 
 class AnchorWallet implements anchor.Wallet {
@@ -35,16 +37,16 @@ class AnchorWallet implements anchor.Wallet {
     return this.adapter.publicKey;
   }
 
-  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+  signTransaction(tx: Transaction): Promise<Transaction> {
     return this.adapter.signTransaction(tx);
   }
 
-  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+  signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
     return this.adapter.signAllTransactions(txs);
   }
 
   get payer(): Keypair {
-    throw new Error('payer not implemented in browser context');
+    throw new Error('payer not implemented');
   }
 }
 
@@ -61,6 +63,7 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, commitment);
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
+
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
   await solana.connect();
@@ -72,65 +75,56 @@ export const createTokenOnChain = async ({
   };
 
   const anchorWallet = new AnchorWallet(adapter);
-  const myAnchorProvider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+  const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
 
-  anchor.setProvider(myAnchorProvider);
+  anchor.setProvider(provider);
 
-  const program = new anchor.Program(idl, programID, myAnchorProvider);
+  const program = new anchor.Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
 
-  // Crear cuenta mint con rent exención y inicializarla
-  const lamports = await connection.getMinimumBalanceForRentExemption(
-    anchor.web3.MintLayout.span
-  );
+  const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
-  const tx = new anchor.web3.Transaction();
-
-  tx.add(
+  const tx = new Transaction().add(
     SystemProgram.createAccount({
-      fromPubkey: myAnchorProvider.wallet.publicKey,
+      fromPubkey: anchorWallet.publicKey,
       newAccountPubkey: mintKeypair.publicKey,
-      space: anchor.web3.MintLayout.span,
+      space: MINT_SIZE,
       lamports,
       programId: TOKEN_PROGRAM_ID,
     }),
-    anchor.web3.Token.createInitMintInstruction(
-      TOKEN_PROGRAM_ID,
+    createInitializeMintInstruction(
       mintKeypair.publicKey,
-      9, // decimals
-      myAnchorProvider.wallet.publicKey,
-      null
+      9,
+      anchorWallet.publicKey,
+      null,
+      TOKEN_PROGRAM_ID
     )
   );
 
-  await myAnchorProvider.sendAndConfirm(tx, [mintKeypair]);
+  await sendAndConfirmTransaction(connection, tx, [mintKeypair]);
 
-  // Obtener cuentas asociadas para token y feeReceiver
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    myAnchorProvider.wallet.publicKey
+    anchorWallet.publicKey
   );
 
-  const feeReceiverPubkey = new PublicKey(walletAddress);
-
+  const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    feeReceiverPubkey
+    feeReceiver
   );
 
-  // Multiplicar tokenSupply por 10^9 para ajustar decimales
-  const supplyBN = new anchor.BN(tokenSupply * 10 ** 9);
+  const amountBN = new anchor.BN(tokenSupply * 10 ** 9);
 
-  // Llamar al método launchToken
   await program.methods
-    .launchToken(9, supplyBN)
+    .launchToken(9, amountBN)
     .accounts({
-      authority: myAnchorProvider.wallet.publicKey,
+      authority: anchorWallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       feeTokenAccount,
-      feeReceiver: feeReceiverPubkey,
+      feeReceiver,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
