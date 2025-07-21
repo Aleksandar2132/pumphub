@@ -6,6 +6,7 @@ import {
   Commitment,
   Keypair,
   Transaction,
+  VersionedTransaction,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
@@ -39,10 +40,10 @@ export const createTokenOnChain = async ({
 
   const phantomWallet: anchor.Wallet = {
     publicKey: new PublicKey(solana.publicKey.toString()),
-    async signTransaction(tx: Transaction) {
+    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
       return await solana.signTransaction(tx);
     },
-    async signAllTransactions(txs: Transaction[]) {
+    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
       return await solana.signAllTransactions(txs);
     },
   };
