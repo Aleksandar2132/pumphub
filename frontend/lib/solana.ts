@@ -42,9 +42,9 @@ class AnchorWallet implements anchor.Wallet {
   }
 
   // 👇 Agregamos esto para que compile
-  get payer(): PublicKey {
-    return this.adapter.publicKey;
-  }
+get payer(): Keypair {
+  throw new Error('payer not implemented in browser context');
+}
 }
 
 export const createTokenOnChain = async ({
