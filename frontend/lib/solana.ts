@@ -50,10 +50,10 @@ export const createTokenOnChain = async ({
     signAllTransactions: async (txs) => await solana.signAllTransactions(txs),
   };
 
-  const provider = new anchor.AnchorProvider(connection, wallet as any, opts);
-  // No es necesario hacer anchor.setProvider(provider) si ya lo pasas aquí
+  const anchorProvider = new anchor.AnchorProvider(connection, wallet as any, opts);
+  // anchor.setProvider(anchorProvider); // Opcional, no necesario
 
-  const program = new anchor.Program(idl as anchor.Idl, programID, provider);
+  const program = new anchor.Program(idl as anchor.Idl, programID, anchorProvider);
 
   const mintKeypair = Keypair.generate();
 
