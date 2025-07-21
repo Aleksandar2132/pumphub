@@ -56,13 +56,13 @@ export const createTokenOnChain = async ({
 
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
-    provider.wallet.publicKey
+    wallet.publicKey
   );
 
   await program.methods
     .launchToken(9, new anchor.BN(tokenSupply))
     .accounts({
-      authority: provider.wallet.publicKey,
+      authority: wallet.publicKey,
       mint: mintKeypair.publicKey,
       tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
