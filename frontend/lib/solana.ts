@@ -32,7 +32,6 @@ import {
 import idlJson from '../idl/pumpfun.json';
 
 const idl = idlJson as Idl;
-const PROGRAM_ID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
@@ -87,15 +86,14 @@ export const createTokenOnChain = async ({
   const wallet = new AnchorWallet(adapter);
   const anchorProvider = new AnchorProvider(connection, wallet, opts);
 
-  // Debug logs
   console.log('anchorProvider instanceof AnchorProvider:', anchorProvider instanceof AnchorProvider);
   console.log('anchorProvider.publicKey:', anchorProvider.publicKey.toBase58());
   console.log('anchorProvider.connection:', !!anchorProvider.connection);
 
   setProvider(anchorProvider);
 
-  // ❗️ Este era el error principal (ahora corregido):
-  const program = new Program(idl, PROGRAM_ID, anchorProvider);
+  // ✅ CORREGIDO: usamos sólo (idl, provider) — sin PROGRAM_ID separado
+  const program = new Program(idl, anchorProvider);
 
   const mintKP = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
