@@ -45,7 +45,7 @@ type PhantomAdapter = {
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-// Wallet personalizada para Anchor basada en Phantom
+// Implementación Wallet para Anchor basada en Phantom
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomAdapter) {}
   get publicKey() {
@@ -57,7 +57,6 @@ class AnchorWallet implements Wallet {
   signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
-  // NO usar payer, lanzar error si se usa
   get payer(): Keypair {
     throw new Error('payer not supported');
   }
@@ -74,40 +73,44 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }): Promise<string> => {
-  // Crear conexión
+  // Conexión
   const connection = new Connection(NETWORK, COMMITMENT);
-
-  // Detectar wallet Phantom
   const solana = (window as any).solana;
+
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
   await solana.connect();
 
-  // Crear adapter Phantom
+  // Adapter Phantom
   const adapter: PhantomAdapter = {
     publicKey: solana.publicKey,
     signTransaction: solana.signTransaction.bind(solana),
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
-  // Wallet compatible con Anchor
+  // Wallet para Anchor
   const wallet = new AnchorWallet(adapter);
 
-  // Crear provider Anchor correctamente
+  // Provider Anchor con la conexión y wallet correctos
   const anchorProvider = new AnchorProvider(connection, wallet, opts);
 
-  // Opcional: setear provider global para Anchor
+  // Debug logs para chequear provider
+  console.log('provider:', anchorProvider);
+  console.log('provider.publicKey:', anchorProvider.publicKey.toBase58());
+  console.log('provider.connection:', !!anchorProvider.connection);
+
+  // Setear provider globalmente (opcional)
   setProvider(anchorProvider);
 
-  // CREAR PROGRAMA Anchor: aquí el 3er parámetro ES anchorProvider, sin casts raros
+  // Crear instancia del programa Anchor con el provider correcto
   const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
-  // Generar Keypair para mint
+  // Generar nueva cuenta mint para el token
   const mintKP = Keypair.generate();
 
-  // Obtener lamports para rent exemption
+  // Obtener el mínimo balance necesario para rent exemption
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
-  // Crear transacción para crear la cuenta mint
+  // Crear transacción para crear la cuenta mint e inicializar el token mint
   const tx = new Transaction().add(
     SystemProgram.createAccount({
       fromPubkey: wallet.publicKey,
@@ -118,25 +121,25 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9, // Decimales del token
+      9, // Decimales
       wallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
     )
   );
 
-  // Enviar transacción para crear mint
+  // Enviar transacción para crear la mint
   await sendAndConfirmTransaction(connection, tx, [mintKP]);
 
-  // Direcciones asociadas de token accounts
+  // Obtener direcciones asociadas para token accounts
   const tokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, wallet.publicKey);
   const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
 
-  // Calcular cantidad tokens con decimales (9)
+  // Calcular cantidad de tokens en base a decimales (9)
   const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9)));
 
-  // Llamar método RPC para lanzar token (según IDL)
+  // Llamar método RPC de Anchor para lanzar token (según tu IDL)
   await program.methods
     .launchToken(9, amount)
     .accounts({
@@ -153,6 +156,6 @@ export const createTokenOnChain = async ({
     .signers([mintKP])
     .rpc();
 
-  // Retornar dirección mint
+  // Retornar la dirección pública (base58) de la mint creada
   return mintKP.publicKey.toBase58();
 };
