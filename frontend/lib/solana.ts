@@ -1,5 +1,3 @@
-// frontend/lib/solana.ts
-
 import {
   Connection,
   PublicKey,
@@ -43,7 +41,7 @@ type PhantomAdapter = {
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-// Implementación Wallet para Anchor basada en Phantom
+// ✅ Clase Wallet adaptada para Anchor
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomAdapter) {}
   get publicKey() {
@@ -56,7 +54,8 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
   get payer(): Keypair {
-    throw new Error('payer not supported');
+    // ✅ Solución al error de tipo
+    return Keypair.generate();
   }
 }
 
@@ -92,7 +91,6 @@ export const createTokenOnChain = async ({
 
   setProvider(anchorProvider);
 
-  // ✅ CORREGIDO: usamos sólo (idl, provider) — sin PROGRAM_ID separado
   const program = new Program(idl, anchorProvider);
 
   const mintKP = Keypair.generate();
