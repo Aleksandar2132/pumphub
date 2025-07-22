@@ -25,29 +25,29 @@ import {
   web3,
 } from '@coral-xyz/anchor';
 
-import { AnchorWallet } from './wallet'; // ✔️ Asegúrate de que wallet.ts esté en la misma carpeta
+import { AnchorWallet } from './wallet'; // ✔️ wallet.ts en la misma carpeta
 
-import idlJson from '../idl/pumpfun.json'; // ✔️ Ajusta si tu ruta es distinta
+import idlJson from '../frontend/idl/pumpfun.json'; // ✔️ ajusta esta ruta a tu estructura
 
 const idl = idlJson as Idl;
 const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
-async function main() {
+export async function launchTokenScript(
+  walletAdapter: {
+    publicKey: PublicKey;
+    signTransaction: (tx: Transaction) => Promise<Transaction>;
+    signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
+  },
+  feeReceiverAddress: string,
+  tokenSupply: number
+) {
   const connection = new Connection(NETWORK, COMMITMENT);
-  const solana = (window as any).solana;
 
-  if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
-  await solana.connect();
+  if (!walletAdapter?.publicKey) throw new Error('Wallet adapter no válido');
 
-  const adapter = {
-    publicKey: solana.publicKey,
-    signTransaction: solana.signTransaction.bind(solana),
-    signAllTransactions: solana.signAllTransactions.bind(solana),
-  };
-
-  const wallet = new AnchorWallet(adapter);
+  const wallet = new AnchorWallet(walletAdapter);
   const provider = new AnchorProvider(connection, wallet, opts);
   setProvider(provider);
 
@@ -66,7 +66,7 @@ async function main() {
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9, // Decimales del token
+      9, // decimales
       wallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
@@ -75,18 +75,12 @@ async function main() {
 
   await sendAndConfirmTransaction(connection, tx, [mintKP]);
 
-  const tokenAccount = await getAssociatedTokenAddress(
-    mintKP.publicKey,
-    wallet.publicKey
-  );
+  const tokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, wallet.publicKey);
 
-  const feeReceiver = new PublicKey('TU_DIRECCION_DE_WALLET'); // 🧠 Cambia esto por tu wallet
-  const feeTokenAccount = await getAssociatedTokenAddress(
-    mintKP.publicKey,
-    feeReceiver
-  );
+  const feeReceiver = new PublicKey(feeReceiverAddress);
+  const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
 
-  const amount = new BN(1_000_000).mul(new BN(10).pow(new BN(9))); // 🧠 Supply fijo: 1 millón con 9 decimales
+  const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9)));
 
   await program.methods
     .launchToken(9, amount)
@@ -106,7 +100,3 @@ async function main() {
 
   console.log('Token creado:', mintKP.publicKey.toBase58());
 }
-
-main().catch((err) => {
-  console.error(err);
-});
