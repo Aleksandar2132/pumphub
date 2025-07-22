@@ -27,15 +27,15 @@ import {
   web3,
 } from '@coral-xyz/anchor';
 
-import idlJson from '../idl/pumpfun.json'; // <-- importa el IDL
-const idl = idlJson as Idl; // <-- tipado correcto
+import idlJson from '../idl/pumpfun.json'; // Importa el IDL
+const idl = idlJson as Idl;
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-// Adaptador Phantom
+// Adaptador Phantom Wallet
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
   signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
@@ -58,8 +58,8 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  get payer() {
-    return this.adapter.publicKey;
+  get payer(): Keypair {
+    throw new Error('payer not implemented');
   }
 }
 
@@ -92,6 +92,7 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
+  // Aquí debes pasar el provider como tercer parámetro para que no falle el tipado
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
