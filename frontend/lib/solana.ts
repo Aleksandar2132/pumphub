@@ -95,7 +95,7 @@ export const createTokenOnChain = async ({
   setProvider(provider);
 
   // CORREGIDO: pasar el provider correctamente para evitar error de tipos
-  const program = new Program(idl, programID, provider);
+  const program = new Program(idl, programID, PublicKey);
 
   const mintKeypair = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
