@@ -88,12 +88,11 @@ export const createTokenOnChain = async ({
   };
 
   const anchorWallet = new AnchorWallet(adapter);
-  const anchorProvider = new AnchorProvider(connection, anchorWallet, opts);
+  const provider = new AnchorProvider(connection, anchorWallet, opts);
 
-  setProvider(anchorProvider);
+  setProvider(provider);
 
-  // PASAR anchorProvider para evitar error de tipos
-  const program = new Program(idl, programID, anchorProvider);
+  const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
