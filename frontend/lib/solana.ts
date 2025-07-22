@@ -27,6 +27,7 @@ import {
   BN,
   Idl,
   web3,
+  Provider, // <-- Importa Provider para tipar correctamente
 } from '@coral-xyz/anchor';
 
 import idlJson from '../idl/pumpfun.json';
@@ -91,7 +92,7 @@ export const createTokenOnChain = async ({
   const wallet = new AnchorWallet(adapter);
 
   // Provider Anchor con la conexión y wallet correctos
-  const anchorProvider: AnchorProvider = new AnchorProvider(connection, wallet, opts);
+  const anchorProvider: Provider = new AnchorProvider(connection, wallet, opts);
 
   // Setear provider globalmente (opcional)
   setProvider(anchorProvider);
