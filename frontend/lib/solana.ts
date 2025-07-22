@@ -32,7 +32,6 @@ import {
 import idlJson from '../idl/pumpfun.json';
 
 const idl = idlJson as Idl;
-
 const PROGRAM_ID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
@@ -73,47 +72,34 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }): Promise<string> => {
-  // Conexión
   const connection = new Connection(NETWORK, COMMITMENT);
   const solana = (window as any).solana;
 
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
   await solana.connect();
 
-  // Adapter Phantom
   const adapter: PhantomAdapter = {
     publicKey: solana.publicKey,
     signTransaction: solana.signTransaction.bind(solana),
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
-  // Wallet para Anchor
   const wallet = new AnchorWallet(adapter);
-
-  // Provider Anchor con la conexión y wallet correctos
   const anchorProvider = new AnchorProvider(connection, wallet, opts);
 
-  // Debug logs para chequear provider
+  // Debug logs
   console.log('anchorProvider instanceof AnchorProvider:', anchorProvider instanceof AnchorProvider);
   console.log('anchorProvider.publicKey:', anchorProvider.publicKey.toBase58());
   console.log('anchorProvider.connection:', !!anchorProvider.connection);
 
-  // Forzamos que TypeScript entienda que es un AnchorProvider
-  const provider: AnchorProvider = anchorProvider;
+  setProvider(anchorProvider);
 
-  // Setear provider globalmente (opcional)
-  setProvider(provider);
+  // ❗️ Este era el error principal (ahora corregido):
+  const program = new Program(idl, PROGRAM_ID, anchorProvider);
 
-  // Crear instancia del programa Anchor con el provider correcto
-  const program = new Program(idl, PROGRAM_ID, provider);
-
-  // Generar nueva cuenta mint para el token
   const mintKP = Keypair.generate();
-
-  // Obtener el mínimo balance necesario para rent exemption
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
-  // Crear transacción para crear la cuenta mint e inicializar el token mint
   const tx = new Transaction().add(
     SystemProgram.createAccount({
       fromPubkey: wallet.publicKey,
@@ -124,25 +110,21 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9, // Decimales
+      9,
       wallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
     )
   );
 
-  // Enviar transacción para crear la mint
   await sendAndConfirmTransaction(connection, tx, [mintKP]);
 
-  // Obtener direcciones asociadas para token accounts
   const tokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, wallet.publicKey);
   const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
 
-  // Calcular cantidad de tokens en base a decimales (9)
   const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9)));
 
-  // Llamar método RPC de Anchor para lanzar token (según tu IDL)
   await program.methods
     .launchToken(9, amount)
     .accounts({
@@ -159,6 +141,5 @@ export const createTokenOnChain = async ({
     .signers([mintKP])
     .rpc();
 
-  // Retornar la dirección pública (base58) de la mint creada
   return mintKP.publicKey.toBase58();
 };
