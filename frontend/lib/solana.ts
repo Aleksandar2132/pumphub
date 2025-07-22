@@ -1,28 +1,6 @@
-import {
-  Connection,
-  PublicKey,
-  SystemProgram,
-  Keypair,
-  Transaction,
-  VersionedTransaction,
-  sendAndConfirmTransaction,
-} from '@solana/web3.js';
-import {
-  getAssociatedTokenAddress,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  createInitializeMintInstruction,
-  MINT_SIZE,
-} from '@solana/spl-token';
-import {
-  AnchorProvider,
-  Program,
-  Wallet,
-  setProvider,
-  BN,
-  Idl,
-  web3,
-} from '@coral-xyz/anchor';
+import { Connection, PublicKey, Keypair, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { getAssociatedTokenAddress, createInitializeMintInstruction, MINT_SIZE, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { AnchorProvider, Program, Wallet, setProvider, BN, Idl, web3 } from '@coral-xyz/anchor';
 
 import idlJson from '../idl/pumpfun.json';
 const idl = idlJson as Idl;
@@ -34,8 +12,8 @@ const opts = { preflightCommitment: COMMITMENT };
 
 type PhantomAdapter = {
   publicKey: PublicKey;
-  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
-  signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
+  signTransaction: <T extends Transaction>(tx: T) => Promise<T>;
+  signAllTransactions: <T extends Transaction>(txs: T[]) => Promise<T[]>;
 };
 
 class AnchorWallet implements Wallet {
@@ -43,28 +21,18 @@ class AnchorWallet implements Wallet {
   get publicKey() {
     return this.adapter.publicKey;
   }
-  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+  signTransaction<T extends Transaction>(tx: T): Promise<T> {
     return this.adapter.signTransaction(tx);
   }
-  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+  signAllTransactions<T extends Transaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
-  get payer(): Keypair {
-    throw new Error('payer not supported');
+  get payer() {
+    throw new Error('Payer not supported');
   }
 }
 
-export const createTokenOnChain = async ({
-  tokenName,
-  tokenSymbol,
-  tokenSupply,
-  walletAddress,
-}: {
-  tokenName: string;
-  tokenSymbol: string;
-  tokenSupply: number;
-  walletAddress: string;
-}) => {
+export async function createTokenOnChain(walletAddress: string, tokenSupply: number) {
   const connection = new Connection(NETWORK, COMMITMENT);
   const solana = (window as any).solana;
 
@@ -79,8 +47,9 @@ export const createTokenOnChain = async ({
 
   const wallet = new AnchorWallet(adapter);
   const provider = new AnchorProvider(connection, wallet, opts);
-  setProvider(provider); // <- esta línea es necesaria
+  setProvider(provider);
 
+  // Aquí provider es el AnchorProvider correcto
   const program = new Program(idl, PROGRAM_ID, provider);
 
   const mintKP = Keypair.generate();
@@ -127,4 +96,4 @@ export const createTokenOnChain = async ({
     .rpc();
 
   return mintKP.publicKey.toBase58();
-};
+}
