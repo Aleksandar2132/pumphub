@@ -88,8 +88,8 @@ export const createTokenOnChain = async ({
   };
 
   const anchorWallet = new AnchorWallet(adapter);
-  const provider = new AnchorProvider(connection, anchorWallet, opts);
 
+  const provider = new AnchorProvider(connection, anchorWallet, opts);
   setProvider(provider);
 
   const program = new Program(idl, programID, provider);
