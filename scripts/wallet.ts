@@ -28,14 +28,13 @@ export class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  // Este campo no es parte de la interfaz Wallet pero lo pones si lo necesitas en tu código
   get payer(): Keypair {
     return dummyKeypair;
   }
 }
 
-// Helper para crear la instancia desde la ventana (Phantom wallet)
-export function createAnchorWalletFromPhantom() {
+// Helper para crear la instancia desde Phantom Wallet en window
+export function createAnchorWalletFromPhantom(): AnchorWallet {
   const solana = (window as any).solana;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 

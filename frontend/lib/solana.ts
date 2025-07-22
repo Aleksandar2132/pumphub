@@ -34,32 +34,8 @@ const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
-// Dummy Keypair para cumplir con la interfaz Wallet de Anchor
-const dummyKeypair = Keypair.generate();
-
-class AnchorWallet implements Wallet {
-  constructor(private adapter: {
-    publicKey: PublicKey;
-    signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
-    signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
-  }) {}
-
-  get publicKey() {
-    return this.adapter.publicKey;
-  }
-
-  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
-    return this.adapter.signTransaction(tx);
-  }
-
-  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
-    return this.adapter.signAllTransactions(txs);
-  }
-
-  get payer(): Keypair {
-    return dummyKeypair;
-  }
-}
+// Aquí importa tu wallet
+import { AnchorWallet } from './wallet'; // ajusta ruta según corresponda
 
 export const createTokenOnChain = async ({
   tokenName,
@@ -84,7 +60,10 @@ export const createTokenOnChain = async ({
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
+  // Instancia la clase AnchorWallet PASANDO el adapter
   const wallet = new AnchorWallet(adapter);
+
+  // Crea el provider con la instancia wallet (no con la función)
   const provider = new AnchorProvider(connection, wallet, opts);
   setProvider(provider);
 
