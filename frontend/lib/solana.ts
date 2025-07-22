@@ -41,7 +41,10 @@ type PhantomAdapter = {
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-// ✅ Clase Wallet adaptada para Anchor
+// ✅ Creamos un payer fijo
+const dummyPayer = Keypair.generate();
+
+// Clase adaptadora para usar Phantom como Wallet de Anchor
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomAdapter) {}
   get publicKey() {
@@ -54,8 +57,8 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
   get payer(): Keypair {
-    // ✅ Solución al error de tipo
-    return Keypair.generate();
+    // ✅ Ahora siempre devuelve el mismo keypair dummy
+    return dummyPayer;
   }
 }
 
@@ -84,11 +87,6 @@ export const createTokenOnChain = async ({
 
   const wallet = new AnchorWallet(adapter);
   const anchorProvider = new AnchorProvider(connection, wallet, opts);
-
-  console.log('anchorProvider instanceof AnchorProvider:', anchorProvider instanceof AnchorProvider);
-  console.log('anchorProvider.publicKey:', anchorProvider.publicKey.toBase58());
-  console.log('anchorProvider.connection:', !!anchorProvider.connection);
-
   setProvider(anchorProvider);
 
   const program = new Program(idl, anchorProvider);
