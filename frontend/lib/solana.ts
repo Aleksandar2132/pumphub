@@ -97,7 +97,8 @@ export const createTokenOnChain = async ({
   setProvider(anchorProvider);
 
   // Crear instancia del programa Anchor con el provider correcto
-  const program = new Program(idl, PROGRAM_ID, anchorProvider);
+  // Aquí hacemos cast explícito para evitar error TS
+  const program = new Program(idl, PROGRAM_ID, anchorProvider as AnchorProvider);
 
   // Generar nueva cuenta mint para el token
   const mintKP = Keypair.generate();
