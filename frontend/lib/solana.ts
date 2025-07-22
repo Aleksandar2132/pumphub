@@ -2,7 +2,6 @@ import {
   Connection,
   PublicKey,
   SystemProgram,
-  Commitment,
   Keypair,
   Transaction,
   VersionedTransaction,
@@ -30,13 +29,13 @@ const idl = idlJson as Idl;
 
 const PROGRAM_ID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const NETWORK = 'https://api.devnet.solana.com';
-const COMMITMENT: Commitment = 'processed';
+const COMMITMENT = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
 type PhantomAdapter = {
   publicKey: PublicKey;
-  signTransaction: <T extends Transaction | VersionedTransaction>(t: T) => Promise<T>;
-  signAllTransactions: <T extends Transaction | VersionedTransaction>(t: T[]) => Promise<T[]>;
+  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
+  signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
 class AnchorWallet implements Wallet {
@@ -51,7 +50,7 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
   get payer(): Keypair {
-    throw new Error('No se usa payer');
+    throw new Error('payer not supported');
   }
 }
 
@@ -66,32 +65,33 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }) => {
-  const conn = new Connection(NETWORK, COMMITMENT);
-  const solana: any = typeof window !== 'undefined' ? (window as any).solana : null;
-  if (!solana?.isPhantom) throw new Error('Phantom no encontrado');
+  const connection = new Connection(NETWORK, COMMITMENT);
+  const solana = (window as any).solana;
+
+  if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
   await solana.connect();
 
   const adapter: PhantomAdapter = {
-    publicKey: new PublicKey(solana.publicKey.toString()),
+    publicKey: solana.publicKey,
     signTransaction: solana.signTransaction.bind(solana),
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
   const wallet = new AnchorWallet(adapter);
-  const provider = new AnchorProvider(conn, wallet, opts);
-  setProvider(provider); // <- correcto, no se usa el resultado
+  const provider = new AnchorProvider(connection, wallet, opts);
+  setProvider(provider); // <- esta línea es necesaria
 
-  const program = new Program<typeof idl>(idl, PROGRAM_ID, provider); // <- se usa el provider real
+  const program = new Program(idl, PROGRAM_ID, provider);
 
   const mintKP = Keypair.generate();
-  const lam = await conn.getMinimumBalanceForRentExemption(MINT_SIZE);
+  const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
   const tx = new Transaction().add(
     SystemProgram.createAccount({
       fromPubkey: wallet.publicKey,
       newAccountPubkey: mintKP.publicKey,
       space: MINT_SIZE,
-      lamports: lam,
+      lamports,
       programId: TOKEN_PROGRAM_ID,
     }),
     createInitializeMintInstruction(
@@ -102,15 +102,16 @@ export const createTokenOnChain = async ({
       TOKEN_PROGRAM_ID
     )
   );
-  await sendAndConfirmTransaction(conn, tx, [mintKP]);
+
+  await sendAndConfirmTransaction(connection, tx, [mintKP]);
 
   const tokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, wallet.publicKey);
   const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
-  const amt = new BN(tokenSupply * 10 ** 9);
+  const amount = new BN(tokenSupply * 10 ** 9);
 
   await program.methods
-    .launchToken(9, amt)
+    .launchToken(9, amount)
     .accounts({
       authority: wallet.publicKey,
       mint: mintKP.publicKey,
