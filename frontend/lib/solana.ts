@@ -29,13 +29,13 @@ import {
 
 import idlJson from '../idl/pumpfun.json';
 
+// ✅ IMPORTACIÓN CORREGIDA
+import { AnchorWallet } from '../../scripts/wallet';
+
 const idl = idlJson as Idl;
 const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
-
-// Aquí importa tu wallet
-import { AnchorWallet } from './wallet'; // ajusta ruta según corresponda
 
 export const createTokenOnChain = async ({
   tokenName,
@@ -60,10 +60,7 @@ export const createTokenOnChain = async ({
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
-  // Instancia la clase AnchorWallet PASANDO el adapter
   const wallet = new AnchorWallet(adapter);
-
-  // Crea el provider con la instancia wallet (no con la función)
   const provider = new AnchorProvider(connection, wallet, opts);
   setProvider(provider);
 
@@ -82,9 +79,9 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9, // decimals
-      wallet.publicKey, // mint authority
-      null, // freeze authority (null)
+      9,
+      wallet.publicKey,
+      null,
       TOKEN_PROGRAM_ID
     )
   );
@@ -95,7 +92,7 @@ export const createTokenOnChain = async ({
   const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
 
-  const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9))); // tokenSupply * 10^decimals
+  const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9)));
 
   await program.methods
     .launchToken(9, amount)
