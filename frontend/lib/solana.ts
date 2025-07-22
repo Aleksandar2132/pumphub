@@ -21,7 +21,6 @@ import {
   AnchorProvider,
   Program,
   Wallet,
-  setProvider,
   BN,
   Idl,
   web3,
@@ -35,14 +34,14 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-// Adaptador Phantom Wallet
+// Phantom Wallet Adapter type
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
   signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-// Clase Wallet personalizada para Anchor
+// Anchor Wallet implementing Wallet interface
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomWalletAdapter) {}
 
@@ -58,8 +57,6 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  // Se quita el getter payer porque no se usa ni es obligatorio
-  // Si alguna dependencia te pide payer, lanza error explícito:
   get payer(): Keypair {
     throw new Error('payer is not implemented');
   }
@@ -76,30 +73,37 @@ export const createTokenOnChain = async ({
   tokenSupply: number;
   walletAddress: string;
 }) => {
+  // Create connection
   const connection = new Connection(network, commitment);
 
+  // Detect Phantom wallet
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
+  // Connect wallet
   await solana.connect();
 
+  // Create adapter from Phantom wallet
   const adapter: PhantomWalletAdapter = {
     publicKey: new PublicKey(solana.publicKey.toString()),
     signTransaction: solana.signTransaction.bind(solana),
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
+  // Create Anchor wallet wrapper
   const anchorWallet = new AnchorWallet(adapter);
+
+  // Create Anchor provider
   const provider = new AnchorProvider(connection, anchorWallet, opts);
 
-  setProvider(provider);
+  // Create Program instance with the correct provider
+  const program = new Program(idl, programID, provider);
 
-  // CORREGIDO: pasar el provider correctamente para evitar error de tipos
-  const program = new Program(idl, programID, PublicKey);
-
+  // Generate mint account
   const mintKeypair = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
+  // Create and initialize mint account transaction
   const tx = new Transaction().add(
     SystemProgram.createAccount({
       fromPubkey: anchorWallet.publicKey,
@@ -110,7 +114,7 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKeypair.publicKey,
-      9,
+      9, // decimals
       anchorWallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
@@ -119,6 +123,7 @@ export const createTokenOnChain = async ({
 
   await sendAndConfirmTransaction(connection, tx, [mintKeypair]);
 
+  // Get associated token accounts for payer and fee receiver
   const tokenAccount = await getAssociatedTokenAddress(
     mintKeypair.publicKey,
     anchorWallet.publicKey
@@ -130,8 +135,10 @@ export const createTokenOnChain = async ({
     feeReceiver
   );
 
-  const amountBN = new BN(tokenSupply * 10 ** 9); // 9 decimales
+  // Convert supply to BN with decimals
+  const amountBN = new BN(tokenSupply * 10 ** 9);
 
+  // Call on-chain program method
   await program.methods
     .launchToken(9, amountBN)
     .accounts({
