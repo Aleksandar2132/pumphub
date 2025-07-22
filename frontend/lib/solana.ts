@@ -94,15 +94,18 @@ export const createTokenOnChain = async ({
   const anchorProvider = new AnchorProvider(connection, wallet, opts);
 
   // Debug logs para chequear provider
-  console.log('provider:', anchorProvider);
-  console.log('provider.publicKey:', anchorProvider.publicKey.toBase58());
-  console.log('provider.connection:', !!anchorProvider.connection);
+  console.log('anchorProvider instanceof AnchorProvider:', anchorProvider instanceof AnchorProvider);
+  console.log('anchorProvider.publicKey:', anchorProvider.publicKey.toBase58());
+  console.log('anchorProvider.connection:', !!anchorProvider.connection);
+
+  // Forzamos que TypeScript entienda que es un AnchorProvider
+  const provider: AnchorProvider = anchorProvider;
 
   // Setear provider globalmente (opcional)
-  setProvider(anchorProvider);
+  setProvider(provider);
 
   // Crear instancia del programa Anchor con el provider correcto
-  const program = new Program(idl, PROGRAM_ID, anchorProvider);
+  const program = new Program(idl, PROGRAM_ID, provider);
 
   // Generar nueva cuenta mint para el token
   const mintKP = Keypair.generate();
