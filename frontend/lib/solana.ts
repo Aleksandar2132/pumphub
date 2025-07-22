@@ -41,14 +41,18 @@ type PhantomAdapter = {
 
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomAdapter) {}
-  get publicKey() { return this.adapter.publicKey; }
+  get publicKey() {
+    return this.adapter.publicKey;
+  }
   signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
     return this.adapter.signTransaction(tx);
   }
   signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
-  get payer(): Keypair { throw new Error('payer not used'); }
+  get payer(): Keypair {
+    throw new Error('No se usa payer');
+  }
 }
 
 export const createTokenOnChain = async ({
@@ -64,7 +68,7 @@ export const createTokenOnChain = async ({
 }) => {
   const conn = new Connection(NETWORK, COMMITMENT);
   const solana: any = typeof window !== 'undefined' ? (window as any).solana : null;
-  if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
+  if (!solana?.isPhantom) throw new Error('Phantom no encontrado');
   await solana.connect();
 
   const adapter: PhantomAdapter = {
