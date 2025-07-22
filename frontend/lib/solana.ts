@@ -34,10 +34,9 @@ const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
-// Keypair dummy para cumplir el contrato Wallet
+// Dummy Keypair para cumplir con la interfaz Wallet de Anchor
 const dummyKeypair = Keypair.generate();
 
-// Clase adaptador para Phantom Wallet que cumple la interfaz Wallet de Anchor
 class AnchorWallet implements Wallet {
   constructor(private adapter: {
     publicKey: PublicKey;
@@ -104,9 +103,9 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9,
-      wallet.publicKey,
-      null,
+      9, // decimals
+      wallet.publicKey, // mint authority
+      null, // freeze authority (null)
       TOKEN_PROGRAM_ID
     )
   );
@@ -117,7 +116,7 @@ export const createTokenOnChain = async ({
   const feeReceiver = new PublicKey(walletAddress);
   const feeTokenAccount = await getAssociatedTokenAddress(mintKP.publicKey, feeReceiver);
 
-  const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9)));
+  const amount = new BN(tokenSupply).mul(new BN(10).pow(new BN(9))); // tokenSupply * 10^decimals
 
   await program.methods
     .launchToken(9, amount)
