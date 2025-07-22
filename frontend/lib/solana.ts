@@ -58,6 +58,8 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
+  // Se quita el getter payer porque no se usa ni es obligatorio
+  // Si alguna dependencia te pide payer, lanza error explícito:
   get payer(): Keypair {
     throw new Error('payer is not implemented');
   }
@@ -92,7 +94,7 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
-  // CORREGIDO: aquí PASAMOS provider y no un PublicKey u otro objeto
+  // CORREGIDO: pasar el provider correctamente para evitar error de tipos
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
