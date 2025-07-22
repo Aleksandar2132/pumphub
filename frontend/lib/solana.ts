@@ -27,9 +27,8 @@ import {
   web3,
 } from '@coral-xyz/anchor';
 
-import idlJson from '../idl/pumpfun.json';
-
-const idl = idlJson as Idl;
+import idlJson from '../idl/pumpfun.json'; // <-- importa el IDL
+const idl = idlJson as Idl; // <-- tipado correcto
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
@@ -93,8 +92,7 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
-  // ⚠️ Fix crítico: especificamos tipo genérico explícito
-  const program = new Program<typeof idl>(idl, programID, provider);
+  const program = new Program(idl, programID, provider); // <--- FIX CRÍTICO AQUÍ
 
   const mintKeypair = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
