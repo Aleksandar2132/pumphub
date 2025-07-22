@@ -81,7 +81,7 @@ export const createTokenOnChain = async ({
   const provider = new AnchorProvider(conn, wallet, opts);
   setProvider(provider);
 
-  const program = new Program(idl, provider); // ✅ CORREGIDO: sin PROGRAM_ID
+  const program = new Program<typeof idl>(idl, PROGRAM_ID, provider);
 
   const mintKP = Keypair.generate();
   const lam = await conn.getMinimumBalanceForRentExemption(MINT_SIZE);
