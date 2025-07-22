@@ -154,3 +154,6 @@ export const createTokenOnChain = async ({
   // Retornar la dirección pública (base58) de la mint creada
   return mintKP.publicKey.toBase58();
 };
+console.log('anchorProvider:', anchorProvider);
+console.log('anchorProvider instanceof AnchorProvider:', anchorProvider instanceof AnchorProvider);
+console.log('PROGRAM_ID:', PROGRAM_ID.toBase58());
