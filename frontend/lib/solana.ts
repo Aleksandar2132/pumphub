@@ -58,7 +58,7 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  // Aquí añadimos el getter payer que requiere Wallet para que compile
+  // Getter payer necesario para cumplir con Wallet interface de Anchor
   get payer(): Keypair {
     throw new Error('payer is not implemented');
   }
@@ -77,6 +77,7 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, commitment);
 
+  // Detectar Phantom wallet en window
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
@@ -93,7 +94,6 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
-  // Aquí debes pasar el provider como tercer parámetro para que no falle el tipado
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
@@ -109,7 +109,7 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKeypair.publicKey,
-      9,
+      9, // Decimales
       anchorWallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
