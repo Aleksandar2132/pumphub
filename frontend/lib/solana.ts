@@ -36,14 +36,14 @@ const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
-// Define el adaptador para la wallet Phantom
+// Adaptador Phantom
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
   signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-// Clase que implementa el Wallet de Anchor usando Phantom
+// Clase Wallet personalizada para Anchor
 class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomWalletAdapter) {}
 
@@ -93,7 +93,8 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
-  const program = new Program(idl, programID, provider);
+  // ⚠️ Fix crítico: especificamos tipo genérico explícito
+  const program = new Program<typeof idl>(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
