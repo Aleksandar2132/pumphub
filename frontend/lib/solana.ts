@@ -58,9 +58,7 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  get payer(): Keypair {
-    throw new Error('payer not implemented');
-  }
+  // Eliminado el getter `payer` para evitar errores de tipo
 }
 
 export const createTokenOnChain = async ({
