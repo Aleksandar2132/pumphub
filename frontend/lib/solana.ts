@@ -34,31 +34,31 @@ const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
-// Interfaz para Phantom Wallet
-type PhantomAdapter = {
-  publicKey: PublicKey;
-  signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
-  signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
-};
+// ✅ FIX: usamos un Keypair fijo para cumplir el contrato Wallet
+const dummyKeypair = Keypair.generate();
 
-// ✅ Creamos un payer fijo
-const dummyPayer = Keypair.generate();
-
-// Clase adaptadora para usar Phantom como Wallet de Anchor
+// ✅ Adaptador para usar Phantom como Anchor Wallet
 class AnchorWallet implements Wallet {
-  constructor(private adapter: PhantomAdapter) {}
+  constructor(private adapter: {
+    publicKey: PublicKey;
+    signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
+    signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
+  }) {}
+
   get publicKey() {
     return this.adapter.publicKey;
   }
+
   signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
     return this.adapter.signTransaction(tx);
   }
+
   signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
     return this.adapter.signAllTransactions(txs);
   }
+
   get payer(): Keypair {
-    // ✅ Ahora siempre devuelve el mismo keypair dummy
-    return dummyPayer;
+    return dummyKeypair;
   }
 }
 
@@ -79,17 +79,17 @@ export const createTokenOnChain = async ({
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
   await solana.connect();
 
-  const adapter: PhantomAdapter = {
+  const adapter = {
     publicKey: solana.publicKey,
     signTransaction: solana.signTransaction.bind(solana),
     signAllTransactions: solana.signAllTransactions.bind(solana),
   };
 
   const wallet = new AnchorWallet(adapter);
-  const anchorProvider = new AnchorProvider(connection, wallet, opts);
-  setProvider(anchorProvider);
+  const provider = new AnchorProvider(connection, wallet, opts);
+  setProvider(provider);
 
-  const program = new Program(idl, anchorProvider);
+  const program = new Program(idl, provider);
 
   const mintKP = Keypair.generate();
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
