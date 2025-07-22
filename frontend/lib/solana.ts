@@ -6,6 +6,7 @@ import {
   Transaction,
   VersionedTransaction,
   sendAndConfirmTransaction,
+  Commitment,
 } from '@solana/web3.js';
 import {
   getAssociatedTokenAddress,
@@ -29,7 +30,7 @@ const idl = idlJson as Idl;
 
 const PROGRAM_ID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const NETWORK = 'https://api.devnet.solana.com';
-const COMMITMENT = 'processed';
+const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
 type PhantomAdapter = {
