@@ -8,6 +8,7 @@ import {
   sendAndConfirmTransaction,
   Commitment,
 } from '@solana/web3.js';
+
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -15,6 +16,7 @@ import {
   createInitializeMintInstruction,
   MINT_SIZE,
 } from '@solana/spl-token';
+
 import {
   AnchorProvider,
   Program,
@@ -26,11 +28,15 @@ import {
 } from '@coral-xyz/anchor';
 
 import idlJson from '../idl/pumpfun.json';
+
 const idl = idlJson as Idl;
 
 const PROGRAM_ID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
+
 const NETWORK = 'https://api.devnet.solana.com';
+
 const COMMITMENT: Commitment = 'processed';
+
 const opts = { preflightCommitment: COMMITMENT };
 
 type PhantomAdapter = {
