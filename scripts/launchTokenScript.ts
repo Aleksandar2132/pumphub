@@ -6,6 +6,7 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   Commitment,
+  VersionedTransaction,
 } from '@solana/web3.js';
 
 import {
@@ -25,20 +26,22 @@ import {
   web3,
 } from '@coral-xyz/anchor';
 
-import { AnchorWallet } from './wallet'; // ✔️ wallet.ts en la misma carpeta
+import { AnchorWallet } from './wallet'; // wallet.ts en la misma carpeta
 
-import idlJson from '../frontend/idl/pumpfun.json'; // ✔️ ajusta esta ruta a tu estructura
+import idlJson from '../frontend/idl/pumpfun.json'; // Ajusta según tu estructura
 
 const idl = idlJson as Idl;
 const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
+type TxType = Transaction | VersionedTransaction;
+
 export async function launchTokenScript(
   walletAdapter: {
     publicKey: PublicKey;
-    signTransaction: (tx: Transaction) => Promise<Transaction>;
-    signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>;
+    signTransaction: <T extends TxType>(tx: T) => Promise<T>;
+    signAllTransactions: <T extends TxType>(txs: T[]) => Promise<T[]>;
   },
   feeReceiverAddress: string,
   tokenSupply: number
@@ -66,7 +69,7 @@ export async function launchTokenScript(
     }),
     createInitializeMintInstruction(
       mintKP.publicKey,
-      9, // decimales
+      9, // decimales del token
       wallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
