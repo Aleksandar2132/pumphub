@@ -27,7 +27,7 @@ import {
   web3,
 } from '@coral-xyz/anchor';
 
-import idlJson from '../idl/pumpfun.json'; // Importa el IDL
+import idlJson from '../idl/pumpfun.json';
 const idl = idlJson as Idl;
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
@@ -58,7 +58,7 @@ class AnchorWallet implements Wallet {
     return this.adapter.signAllTransactions(txs);
   }
 
-  // Getter payer necesario para cumplir con Wallet interface de Anchor
+  // Añadido getter payer para evitar error
   get payer(): Keypair {
     throw new Error('payer is not implemented');
   }
@@ -77,7 +77,6 @@ export const createTokenOnChain = async ({
 }) => {
   const connection = new Connection(network, commitment);
 
-  // Detectar Phantom wallet en window
   const solana = typeof window !== 'undefined' ? (window as any).solana : null;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
@@ -94,6 +93,7 @@ export const createTokenOnChain = async ({
 
   setProvider(provider);
 
+  // IMPORTANTE: Aquí sí debe ir el provider, no PublicKey ni nada más
   const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
@@ -109,7 +109,7 @@ export const createTokenOnChain = async ({
     }),
     createInitializeMintInstruction(
       mintKeypair.publicKey,
-      9, // Decimales
+      9,
       anchorWallet.publicKey,
       null,
       TOKEN_PROGRAM_ID
