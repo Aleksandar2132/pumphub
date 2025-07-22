@@ -33,7 +33,7 @@ export class AnchorWallet implements Wallet {
   }
 }
 
-// ✅ OPCIONAL: Helper para instanciar desde Phantom directamente
+// ✅ OPCIONAL: Helper para instanciar desde Phantom directamente (solo en entorno browser)
 export function createAnchorWalletFromPhantom(): AnchorWallet {
   const solana = (window as any).solana;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
