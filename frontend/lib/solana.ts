@@ -34,10 +34,10 @@ const NETWORK = 'https://api.devnet.solana.com';
 const COMMITMENT: Commitment = 'processed';
 const opts = { preflightCommitment: COMMITMENT };
 
-// ✅ FIX: usamos un Keypair fijo para cumplir el contrato Wallet
+// Keypair dummy para cumplir el contrato Wallet
 const dummyKeypair = Keypair.generate();
 
-// ✅ Adaptador para usar Phantom como Anchor Wallet
+// Clase adaptador para Phantom Wallet que cumple la interfaz Wallet de Anchor
 class AnchorWallet implements Wallet {
   constructor(private adapter: {
     publicKey: PublicKey;
