@@ -47,3 +47,5 @@ export function createAnchorWalletFromPhantom() {
 
   return new AnchorWallet(adapter);
 }
+
+export default createAnchorWalletFromPhantom;
