@@ -1,4 +1,3 @@
-import * as anchor from '@coral-xyz/anchor';
 import {
   Connection,
   PublicKey,
@@ -9,6 +8,7 @@ import {
   VersionedTransaction,
   sendAndConfirmTransaction,
 } from '@solana/web3.js';
+
 import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -16,22 +16,35 @@ import {
   createInitializeMintInstruction,
   MINT_SIZE,
 } from '@solana/spl-token';
+
+import {
+  AnchorProvider,
+  Program,
+  Wallet,
+  setProvider,
+  BN,
+  Idl,
+  web3,
+} from '@coral-xyz/anchor';
+
 import idlJson from '../idl/pumpfun.json';
 
-const idl = idlJson as anchor.Idl;
+const idl = idlJson as Idl;
 
 const programID = new PublicKey('CKyBVMEvLvvAmek76UEq4gkQasdx78hdt2apCXCKtXiB');
 const network = 'https://api.devnet.solana.com';
 const commitment: Commitment = 'processed';
 const opts = { preflightCommitment: commitment };
 
+// Define el adaptador para la wallet Phantom
 type PhantomWalletAdapter = {
   publicKey: PublicKey;
   signTransaction: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
   signAllTransactions: <T extends Transaction | VersionedTransaction>(txs: T[]) => Promise<T[]>;
 };
 
-class AnchorWallet implements anchor.Wallet {
+// Clase que implementa el Wallet de Anchor usando Phantom
+class AnchorWallet implements Wallet {
   constructor(private adapter: PhantomWalletAdapter) {}
 
   get publicKey(): PublicKey {
@@ -63,8 +76,8 @@ export const createTokenOnChain = async ({
   walletAddress: string;
 }) => {
   const connection = new Connection(network, commitment);
-  const solana = typeof window !== 'undefined' ? (window as any).solana : null;
 
+  const solana = typeof window !== 'undefined' ? (window as any).solana : null;
   if (!solana?.isPhantom) throw new Error('Phantom wallet not found');
 
   await solana.connect();
@@ -76,14 +89,13 @@ export const createTokenOnChain = async ({
   };
 
   const anchorWallet = new AnchorWallet(adapter);
-  const provider = new anchor.AnchorProvider(connection, anchorWallet, opts);
+  const provider = new AnchorProvider(connection, anchorWallet, opts);
 
-  anchor.setProvider(provider);
+  setProvider(provider);
 
-  const program = new anchor.Program(idl, programID, provider);
+  const program = new Program(idl, programID, provider);
 
   const mintKeypair = Keypair.generate();
-
   const lamports = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
 
   const tx = new Transaction().add(
@@ -116,7 +128,7 @@ export const createTokenOnChain = async ({
     feeReceiver
   );
 
-  const amountBN = new anchor.BN(tokenSupply * 10 ** 9);
+  const amountBN = new BN(tokenSupply * 10 ** 9); // 9 decimales
 
   await program.methods
     .launchToken(9, amountBN)
@@ -129,7 +141,7 @@ export const createTokenOnChain = async ({
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
-      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      rent: web3.SYSVAR_RENT_PUBKEY,
     })
     .signers([mintKeypair])
     .rpc();
