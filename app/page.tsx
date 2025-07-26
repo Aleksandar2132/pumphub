@@ -52,7 +52,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white p-4 flex flex-col items-center">
-      <h1 className="text-4xl font-bold mb-4">🚀 PumpFun Clone</h1>
+      <h1 className="text-4xl font-bold mb-4">🚀 pumphub</h1>
 
       {walletAddress ? (
         <p className="mb-4">Conectado: {walletAddress}</p>
